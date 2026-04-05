@@ -1,1 +1,24 @@
-/* You can add global styles to this file, and also import other style files */
+/* Base global de layout y tipografía de todo el frontend. */
+html,
+body {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: Inter, "Segoe UI", Arial, sans-serif;
+	background: #eef3f8;
+	color: #172033;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+/* Fuerza que controles de formulario hereden la fuente global. */
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}

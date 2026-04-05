@@ -1,59 +1,101 @@
-# MiApp
+# VetCore
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.6.
+Aplicación base para una veterinaria con Angular, Express y MongoDB.
 
-## Development server
+## Qué hace esta base
 
-To start a local development server, run:
+1. `Angular` muestra la interfaz.
+2. `Express` expone la API.
+3. `MongoDB` guarda los datos.
+4. `JWT` protege las rutas privadas.
+5. `docker-compose` levanta la base de datos de forma local.
+
+## Estructura mental del proyecto
+
+1. Pantalla pública: inicio de sesión.
+2. Zona privada: panel, dueños, mascotas, citas e historia clínica.
+3. Backend: autentica usuarios y administra colecciones MongoDB.
+
+## Datos de prueba
+
+Al iniciar por primera vez se crean usuarios y datos semilla.
+
+Credenciales de acceso:
+
+- Correo: `admin@vet.com`
+- Contraseña: `Admin123*`
+
+## Paso a paso de lo que hace el código
+
+1. El navegador abre `/login`.
+2. `LoginComponent` valida el formulario y llama a `AuthService`.
+3. `AuthService` envía el correo y la contraseña a `/api/auth/login`.
+4. El backend busca el usuario en MongoDB y compara la contraseña con `bcrypt`.
+5. Si todo coincide, el backend devuelve un `JWT` y el usuario autenticado.
+6. Angular guarda la sesión en `localStorage`.
+7. `authGuard` bloquea las rutas privadas si no existe sesión.
+8. `authInterceptor` agrega el token en cada petición HTTP.
+9. `LayoutComponent` muestra el menú lateral y el botón de cerrar sesión.
+10. Las pantallas de dueños, mascotas, citas y registros llaman a la API para listar y guardar datos.
+11. El backend consulta MongoDB con `mongoose` y responde en JSON.
+
+## Endpoints principales
+
+1. `POST /api/auth/login`
+2. `GET /api/dashboard/summary`
+3. `GET /api/owners`
+4. `GET /api/pets`
+5. `GET /api/appointments`
+6. `GET /api/records`
+
+## Cómo levantar MongoDB con Docker
+
+1. Levanta el contenedor:
 
 ```bash
-ng serve
+docker compose up -d --build
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+2. MongoDB quedará disponible en `mongodb://root:rootpass@127.0.0.1:27017/mi_veterinaria?authSource=admin`.
 
-## Code scaffolding
+## Cómo levantar la API
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+1. Instala dependencias:
 
 ```bash
-ng generate component component-name
+npm install
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+2. Arranca el backend:
 
 ```bash
-ng generate --help
+npm run api
 ```
 
-## Building
+3. La API quedará en `http://localhost:3000`.
 
-To build the project run:
+## Cómo levantar Angular
 
 ```bash
-ng build
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Luego abre `http://localhost:4200/`.
 
-## Running unit tests
+## Qué deberías revisar primero si quieres entender el flujo
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+1. `src/app/pages/login.component.ts`
+2. `src/app/core/auth.service.ts`
+3. `src/app/core/auth.guard.ts`
+4. `src/app/core/layout.component.ts`
+5. `server/routes/auth.js`
+6. `server/routes/dashboard.js`
+7. `server/routes/pets.js`
 
-```bash
-ng test
-```
+## Notas útiles
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+1. No conectes Angular directo a MongoDB.
+2. Siempre pasa por la API.
+3. Usa `JWT` para proteger las rutas privadas.
+4. Usa `mongoose` para modelar las colecciones.
+5. Mantén el login separado del core privado.

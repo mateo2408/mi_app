@@ -1,4 +1,6 @@
-import { Component, signal } from '@angular/core';
+// Componente raíz del frontend.
+// Su única responsabilidad es exponer el contenedor de rutas global.
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -8,5 +10,4 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('mi_app');
 }

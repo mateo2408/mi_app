@@ -1,0 +1,22 @@
+# Stack local de infraestructura (MongoDB) para desarrollo.
+services:
+  mongo:
+    # Imagen construida localmente para incluir script de init.
+    build:
+      context: .
+      dockerfile: docker/mongo/Dockerfile
+    container_name: mi_veterinaria_mongo
+    restart: unless-stopped
+    environment:
+      # Credenciales de administrador para entorno local.
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpass
+      MONGO_INITDB_DATABASE: mi_veterinaria
+    ports:
+      - '27017:27017'
+    volumes:
+      # Persistencia para no perder datos al reiniciar contenedor.
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
