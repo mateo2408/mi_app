@@ -28,6 +28,8 @@ import { Owner } from '../core/models';
       </form>
 
       <section class="card list">
+        <p class="status error" *ngIf="errorMessage">{{ errorMessage }}</p>
+        <p class="status" *ngIf="!errorMessage && owners.length === 0">No hay dueños registrados.</p>
         <div class="row" *ngFor="let owner of owners">
           <div>
             <strong>{{ owner.fullName }}</strong>
@@ -95,6 +97,16 @@ import { Owner } from '../core/models';
         padding: 8px 18px;
       }
 
+      .status {
+        margin: 10px 0 14px;
+        color: #475569;
+        font-weight: 600;
+      }
+
+      .status.error {
+        color: #b91c1c;
+      }
+
       .row {
         display: flex;
         align-items: center;
@@ -134,6 +146,7 @@ export class OwnersComponent {
   // Lista local que respalda el render de la tabla/listado.
   owners: Owner[] = [];
   loading = false;
+  errorMessage = '';
 
   // Formulario de creación rápida de dueño.
   readonly form = this.fb.nonNullable.group({
@@ -149,7 +162,14 @@ export class OwnersComponent {
 
   async reload(): Promise<void> {
     // Sin paginación por simplicidad en esta versión base.
-    this.owners = await firstValueFrom(this.apiService.listOwners());
+    this.errorMessage = '';
+
+    try {
+      this.owners = await firstValueFrom(this.apiService.listOwners());
+    } catch {
+      this.owners = [];
+      this.errorMessage = 'No se pudieron cargar los dueños. Verifica que la API esté encendida y tu sesión siga activa.';
+    }
   }
 
   async save(): Promise<void> {

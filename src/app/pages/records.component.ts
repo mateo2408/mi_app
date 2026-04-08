@@ -29,7 +29,10 @@ import { ClinicalRecord, Pet } from '../core/models';
         <input formControlName="diagnosis" placeholder="Diagnóstico" />
         <input formControlName="treatment" placeholder="Tratamiento" />
         <input class="wide" formControlName="notes" placeholder="Observaciones" />
-        <button type="submit" [disabled]="form.invalid || loading">Guardar registro</button>
+        <button type="submit" [disabled]="form.invalid || loading">
+          {{ editingId ? 'Actualizar registro' : 'Guardar registro' }}
+        </button>
+        <button type="button" *ngIf="editingId" (click)="cancelEdit()">Cancelar edición</button>
       </form>
 
       <section class="card list">
@@ -41,7 +44,10 @@ import { ClinicalRecord, Pet } from '../core/models';
             </p>
             <small>{{ record.diagnosis }} · {{ record.treatment }}</small>
           </div>
-          <button type="button" (click)="remove(record._id)">Eliminar</button>
+          <div class="actions">
+            <button type="button" (click)="startEdit(record)">Editar</button>
+            <button type="button" (click)="remove(record._id)">Eliminar</button>
+          </div>
         </div>
       </section>
     </section>
@@ -126,6 +132,11 @@ import { ClinicalRecord, Pet } from '../core/models';
         color: #64748b;
       }
 
+      .actions {
+        display: flex;
+        gap: 10px;
+      }
+
       @media (max-width: 1100px) {
         .form {
           grid-template-columns: 1fr;
@@ -151,6 +162,7 @@ export class RecordsComponent {
   pets: Pet[] = [];
   records: ClinicalRecord[] = [];
   loading = false;
+  editingId: string | null = null;
 
   // Formulario de alta de registro clínico.
   readonly form = this.fb.nonNullable.group({
@@ -189,13 +201,36 @@ export class RecordsComponent {
 
     this.loading = true;
     try {
-      // Inserta registro y actualiza lista local.
-      const record = await firstValueFrom(this.apiService.createRecord(this.form.getRawValue()));
-      this.records = [record, ...this.records];
+      if (this.editingId) {
+        await firstValueFrom(this.apiService.updateRecord(this.editingId, this.form.getRawValue()));
+      } else {
+        // Inserta registro y actualiza lista local.
+        await firstValueFrom(this.apiService.createRecord(this.form.getRawValue()));
+      }
+
+      await this.reload();
+      this.editingId = null;
       this.form.patchValue({ diagnosis: '', treatment: '', notes: '' });
     } finally {
       this.loading = false;
     }
+  }
+
+  startEdit(record: ClinicalRecord): void {
+    this.editingId = record._id;
+    this.form.patchValue({
+      petId: this.extractPetId(record.petId),
+      veterinarianName: record.veterinarianName,
+      recordDate: this.toDateInput(record.recordDate),
+      diagnosis: record.diagnosis,
+      treatment: record.treatment,
+      notes: record.notes ?? ''
+    });
+  }
+
+  cancelEdit(): void {
+    this.editingId = null;
+    this.form.patchValue({ diagnosis: '', treatment: '', notes: '' });
   }
 
   async remove(id: string): Promise<void> {
@@ -207,5 +242,14 @@ export class RecordsComponent {
   extractPet(value: unknown): string {
     const pet = value as { name?: string } | undefined;
     return pet?.name ?? 'Mascota';
+  }
+
+  private extractPetId(value: string | Pet): string {
+    return typeof value === 'string' ? value : value._id;
+  }
+
+  private toDateInput(value: string): string {
+    // Normaliza a YYYY-MM-DD para el control date.
+    return value.slice(0, 10);
   }
 }

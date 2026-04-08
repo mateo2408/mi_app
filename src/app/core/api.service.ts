@@ -72,6 +72,10 @@ export class ApiService {
     return this.http.post<ClinicalRecord>(`${apiBaseUrl}/records`, payload);
   }
 
+  updateRecord(id: string, payload: Partial<ClinicalRecord>) {
+    return this.http.patch<ClinicalRecord>(`${apiBaseUrl}/records/${id}`, payload);
+  }
+
   deleteRecord(id: string) {
     return this.http.delete<{ message: string }>(`${apiBaseUrl}/records/${id}`);
   }

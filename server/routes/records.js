@@ -20,6 +20,12 @@ router.post('/', requireAuth, async (req, res) => {
   return res.status(201).json(record);
 });
 
+router.patch('/:id', requireAuth, async (req, res) => {
+  // PATCH permite editar campos puntuales sin reemplazar el registro completo.
+  const record = await ClinicalRecord.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  return res.json(record);
+});
+
 router.delete('/:id', requireAuth, async (req, res) => {
   await ClinicalRecord.findByIdAndDelete(req.params.id);
   return res.json({ message: 'Registro eliminado' });

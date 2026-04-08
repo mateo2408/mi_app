@@ -1,101 +1,166 @@
 # VetCore
 
-Aplicación base para una veterinaria con Angular, Express y MongoDB.
+Aplicación web para gestión veterinaria con autenticación JWT, panel privado y módulos CRUD de dueños, mascotas, citas e historia clínica.
 
-## Qué hace esta base
+## Estado del proyecto
 
-1. `Angular` muestra la interfaz.
-2. `Express` expone la API.
-3. `MongoDB` guarda los datos.
-4. `JWT` protege las rutas privadas.
-5. `docker-compose` levanta la base de datos de forma local.
+Proyecto funcional en desarrollo activo.
 
-## Estructura mental del proyecto
+## Funcionalidades
 
-1. Pantalla pública: inicio de sesión.
-2. Zona privada: panel, dueños, mascotas, citas e historia clínica.
-3. Backend: autentica usuarios y administra colecciones MongoDB.
+- Login de usuario con correo y contraseña.
+- Protección de rutas privadas en frontend y backend.
+- Dashboard con resumen de entidades y listas recientes.
+- Gestión de dueños.
+- Gestión de mascotas.
+- Gestión de citas.
+- Gestión de historia clínica, incluyendo actualización de registros.
 
-## Datos de prueba
+## Arquitectura
 
-Al iniciar por primera vez se crean usuarios y datos semilla.
+1. Angular renderiza la interfaz y maneja navegación.
+2. Express expone la API REST.
+3. MongoDB persiste la información.
+4. JWT protege endpoints privados.
+5. Docker Compose facilita levantar MongoDB local.
 
-Credenciales de acceso:
+## Flujo de autenticación
 
-- Correo: `admin@vet.com`
-- Contraseña: `Admin123*`
+1. El usuario abre la ruta pública `/login`.
+2. El formulario envía credenciales a `POST /api/auth/login`.
+3. El backend valida el usuario y la contraseña con `bcrypt`.
+4. Si son válidas, responde con token JWT y perfil.
+5. Angular guarda sesión en `localStorage`.
+6. El guard de rutas bloquea navegación a `/app/*` sin sesión.
+7. El interceptor agrega `Authorization: Bearer <token>` en cada petición privada.
 
-## Paso a paso de lo que hace el código
+## CRUD por módulo
 
-1. El navegador abre `/login`.
-2. `LoginComponent` valida el formulario y llama a `AuthService`.
-3. `AuthService` envía el correo y la contraseña a `/api/auth/login`.
-4. El backend busca el usuario en MongoDB y compara la contraseña con `bcrypt`.
-5. Si todo coincide, el backend devuelve un `JWT` y el usuario autenticado.
-6. Angular guarda la sesión en `localStorage`.
-7. `authGuard` bloquea las rutas privadas si no existe sesión.
-8. `authInterceptor` agrega el token en cada petición HTTP.
-9. `LayoutComponent` muestra el menú lateral y el botón de cerrar sesión.
-10. Las pantallas de dueños, mascotas, citas y registros llaman a la API para listar y guardar datos.
-11. El backend consulta MongoDB con `mongoose` y responde en JSON.
+### Dueños
+
+- Crear: `POST /api/owners`
+- Leer: `GET /api/owners`
+- Actualizar: `PUT /api/owners/:id`
+- Eliminar: `DELETE /api/owners/:id`
+
+### Mascotas
+
+- Crear: `POST /api/pets`
+- Leer: `GET /api/pets`
+- Actualizar: `PUT /api/pets/:id`
+- Eliminar: `DELETE /api/pets/:id`
+
+### Citas
+
+- Crear: `POST /api/appointments`
+- Leer: `GET /api/appointments`
+- Actualizar: `PATCH /api/appointments/:id`
+- Eliminar: `DELETE /api/appointments/:id`
+
+### Historia clínica
+
+- Crear: `POST /api/records`
+- Leer: `GET /api/records`
+- Actualizar: `PATCH /api/records/:id`
+- Eliminar: `DELETE /api/records/:id`
 
 ## Endpoints principales
 
-1. `POST /api/auth/login`
-2. `GET /api/dashboard/summary`
-3. `GET /api/owners`
-4. `GET /api/pets`
-5. `GET /api/appointments`
-6. `GET /api/records`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `GET /api/dashboard/summary`
+- `GET /api/owners`
+- `GET /api/pets`
+- `GET /api/appointments`
+- `GET /api/records`
 
-## Cómo levantar MongoDB con Docker
+## Tecnologías utilizadas
 
-1. Levanta el contenedor:
+- Angular
+- Express
+- MongoDB + Mongoose
+- JSON Web Token
+- bcryptjs
+- Docker / Docker Compose
 
-```bash
-docker compose up -d --build
-```
+## Requisitos previos
 
-2. MongoDB quedará disponible en `mongodb://root:rootpass@127.0.0.1:27017/mi_veterinaria?authSource=admin`.
+- Node.js y npm
+- Docker Desktop
 
-## Cómo levantar la API
+## Instalación y ejecución
 
-1. Instala dependencias:
+### 1) Instalar dependencias
 
 ```bash
 npm install
 ```
 
-2. Arranca el backend:
+### 2) Levantar MongoDB
+
+```bash
+docker compose up -d --build
+```
+
+Cadena de conexión local:
+
+`mongodb://root:rootpass@127.0.0.1:27017/mi_veterinaria?authSource=admin`
+
+### 3) Levantar backend
 
 ```bash
 npm run api
 ```
 
-3. La API quedará en `http://localhost:3000`.
+API disponible en `http://localhost:3000`.
 
-## Cómo levantar Angular
+### 4) Levantar frontend
 
 ```bash
 npm start
 ```
 
-Luego abre `http://localhost:4200/`.
+Aplicación disponible en `http://localhost:4200`.
 
-## Qué deberías revisar primero si quieres entender el flujo
+## Datos de prueba
 
-1. `src/app/pages/login.component.ts`
-2. `src/app/core/auth.service.ts`
-3. `src/app/core/auth.guard.ts`
-4. `src/app/core/layout.component.ts`
-5. `server/routes/auth.js`
-6. `server/routes/dashboard.js`
-7. `server/routes/pets.js`
+En el primer arranque se generan datos semilla.
 
-## Notas útiles
+Credenciales iniciales:
 
-1. No conectes Angular directo a MongoDB.
-2. Siempre pasa por la API.
-3. Usa `JWT` para proteger las rutas privadas.
-4. Usa `mongoose` para modelar las colecciones.
-5. Mantén el login separado del core privado.
+- Correo: `admin@vet.com`
+- Contraseña: `Admin123*`
+
+## Estructura del proyecto
+
+```text
+mi_app/
+	server/   # API Express, modelos Mongoose y rutas
+	src/      # Frontend Angular
+	docker/   # Archivos de apoyo para MongoDB local
+```
+
+## Archivos clave para entender el flujo
+
+- `src/app/pages/login.component.ts`
+- `src/app/core/auth.service.ts`
+- `src/app/core/auth.guard.ts`
+- `src/app/core/auth.interceptor.ts`
+- `src/app/pages/records.component.ts`
+- `server/routes/auth.js`
+- `server/middleware/auth.js`
+- `server/routes/records.js`
+
+## Acceso al proyecto
+
+1. Clona el repositorio.
+2. Entra a la carpeta `mi_app`.
+3. Ejecuta los comandos de instalación y arranque de esta guía.
+
+## Contribución
+
+Si deseas contribuir, abre un issue con el cambio propuesto o envía un pull request con una descripción clara del ajuste.
+
+## Autoría
+
+Desarrollado por Mateo Cisneros.
