@@ -1,4 +1,8 @@
-// Modelo de usuario del sistema (acceso y roles).
+/**
+ * @StudyGuide [MODELO] Autenticación / Veterinarios
+ * Representa a los usuarios del sistema (Doctores, Administradores).
+ * Demuestra la seguridad recomendada (Hash de contraseñas, enumeración de roles).
+ */
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
@@ -16,7 +20,7 @@ const userSchema = new mongoose.Schema(
       trim: true
     },
     passwordHash: {
-      // Nunca se guarda contraseña en texto plano.
+      // @StudyGuide Nunca se guarda la contraseña en texto plano en la Base de Datos.
       type: String,
       required: true
     },

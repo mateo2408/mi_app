@@ -1,22 +1,35 @@
-# Stack local de infraestructura (MongoDB) para desarrollo.
+# @StudyGuide [ORQUESTACIÓN DOCKER-COMPOSE] 
+# Este archivo .yml empaqueta los servicios locales para desarrollo.
+# Garantiza la paridad de entornos (ej. todos los contribuyentes tienen la misma Base de Datos MongoDB).
+# Se adjunta el montaje del backend (API Express) para despliegues didácticos en un solo click.
 services:
   mongo:
-    # Imagen construida localmente para incluir script de init.
+    # 1. Base de Datos Local MongoDB (Para persistir Mongoose Schemas)
     build:
       context: .
       dockerfile: docker/mongo/Dockerfile
     container_name: mi_veterinaria_mongo
     restart: unless-stopped
     environment:
-      # Credenciales de administrador para entorno local.
+      # Credenciales de acceso MOCK.
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpass
       MONGO_INITDB_DATABASE: mi_veterinaria
     ports:
       - '27017:27017'
     volumes:
-      # Persistencia para no perder datos al reiniciar contenedor.
+      # Volumetría para persistir información (que la data local no muera si matamos el contenedor).
       - mongo_data:/data/db
+
+  # 2. El Backend Node.js de nuestra App (Comentado o levantado mediante Dockerfile opcional).
+  # api:
+  #   build: .
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     MONGO_URI: mongodb://root:rootpass@mongo:27017/mi_veterinaria?authSource=admin
+  #   depends_on:
+  #     - mongo
 
 volumes:
   mongo_data:
