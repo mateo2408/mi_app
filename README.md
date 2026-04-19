@@ -1,68 +1,57 @@
 # VetCore
 
-Aplicación web para gestión veterinaria con autenticación JWT, panel privado y módulos CRUD de dueños, mascotas, citas e historia clínica.
+VetCore es una aplicación web de gestión veterinaria que centraliza la operación clínica y administrativa de una veterinaria: usuarios, dueños, mascotas, citas e historias clínicas.
 
-## Estado del proyecto
+## Resumen del core
 
-Proyecto funcional en desarrollo activo.
+El núcleo de la aplicación está en tres capas:
 
-## Funcionalidades
-
-- Login de usuario con correo y contraseña.
-- Protección de rutas privadas en frontend y backend.
-- Dashboard con resumen de entidades y listas recientes.
-- Gestión de dueños.
-- Gestión de mascotas.
-- Gestión de citas.
-- Gestión de historia clínica, incluyendo actualización de registros.
+1. Autenticación segura con JWT para acceder al área privada.
+2. Gestión operativa por módulos con CRUD de dueños, mascotas, citas y registros clínicos.
+3. Dashboard de seguimiento con métricas generales y actividad reciente para una visión rápida del estado de la clínica.
 
 ## Arquitectura
 
-1. Angular renderiza la interfaz y maneja navegación.
-2. Express expone la API REST.
-3. MongoDB persiste la información.
-4. JWT protege endpoints privados.
-5. Docker Compose facilita levantar MongoDB local.
+- Frontend en Angular 21 con navegación protegida, interceptores HTTP y soporte SSR/hidratación.
+- Backend en Express 5 con API REST, validación de sesión y manejo centralizado de errores.
+- Persistencia en MongoDB con Mongoose.
+- Seguridad basada en JWT y bcryptjs.
+- Contenedorización de MongoDB con Docker Compose.
 
-## Flujo de autenticación
+## Flujo principal de uso
 
-1. El usuario abre la ruta pública `/login`.
-2. El formulario envía credenciales a `POST /api/auth/login`.
-3. El backend valida el usuario y la contraseña con `bcrypt`.
-4. Si son válidas, responde con token JWT y perfil.
-5. Angular guarda sesión en `localStorage`.
-6. El guard de rutas bloquea navegación a `/app/*` sin sesión.
-7. El interceptor agrega `Authorization: Bearer <token>` en cada petición privada.
+1. El usuario ingresa por la ruta pública `/login`.
+2. El frontend envía credenciales a `POST /api/auth/login`.
+3. El backend valida el usuario contra MongoDB y compara la contraseña con `bcrypt`.
+4. Si todo es correcto, devuelve un JWT y el perfil del usuario.
+5. Angular guarda la sesión en `localStorage` y la restaura al recargar la app.
+6. Los guards bloquean el acceso a `/app/*` sin sesión y evitan volver al login si ya hay una sesión activa.
+7. El interceptor agrega `Authorization: Bearer <token>` a las peticiones privadas.
 
-## CRUD por módulo
+## Módulos funcionales
+
+### Dashboard
+
+- Muestra conteos globales de dueños, mascotas, citas e historias clínicas.
+- Presenta información reciente para seguimiento operativo.
+- Incluye acceso rápido para crear pacientes y citas desde el panel.
 
 ### Dueños
 
-- Crear: `POST /api/owners`
-- Leer: `GET /api/owners`
-- Actualizar: `PUT /api/owners/:id`
-- Eliminar: `DELETE /api/owners/:id`
+- Alta, consulta y eliminación de propietarios.
 
 ### Mascotas
 
-- Crear: `POST /api/pets`
-- Leer: `GET /api/pets`
-- Actualizar: `PUT /api/pets/:id`
-- Eliminar: `DELETE /api/pets/:id`
+- Registro de pacientes veterinarios vinculados a un dueño.
+- Información base: nombre, especie, raza, sexo, fecha de nacimiento y notas.
 
 ### Citas
 
-- Crear: `POST /api/appointments`
-- Leer: `GET /api/appointments`
-- Actualizar: `PATCH /api/appointments/:id`
-- Eliminar: `DELETE /api/appointments/:id`
+- Creación, consulta, actualización de estado y eliminación de citas.
 
 ### Historia clínica
 
-- Crear: `POST /api/records`
-- Leer: `GET /api/records`
-- Actualizar: `PATCH /api/records/:id`
-- Eliminar: `DELETE /api/records/:id`
+- Registro clínico por mascota con veterinario, fecha, diagnóstico, tratamiento y observaciones.
 
 ## Endpoints principales
 
@@ -74,19 +63,29 @@ Proyecto funcional en desarrollo activo.
 - `GET /api/appointments`
 - `GET /api/records`
 
-## Tecnologías utilizadas
+## Estructura del proyecto
 
-- Angular
-- Express
-- MongoDB + Mongoose
-- JSON Web Token
-- bcryptjs
-- Docker / Docker Compose
+```text
+mi_app/
+	BACKEND/   # API Express, rutas, middleware y modelos Mongoose
+	FRONTEND/  # Aplicación Angular
+	docker/    # Soporte para MongoDB local
+	docker-compose.yml
+	package.json
+```
+
+## Scripts disponibles
+
+- `npm start`: levanta el frontend Angular.
+- `npm run api`: levanta la API Express.
+- `npm run build`: compila la app Angular.
+- `npm run test`: ejecuta pruebas del frontend.
+- `npm run serve:ssr:mi_app`: ejecuta la versión SSR compilada.
 
 ## Requisitos previos
 
-- Node.js y npm
-- Docker Desktop
+- Node.js y npm.
+- Docker Desktop.
 
 ## Instalación y ejecución
 
@@ -102,11 +101,13 @@ npm install
 docker compose up -d --build
 ```
 
-Cadena de conexión local:
+Cadena local usada por defecto:
 
-`mongodb://root:rootpass@127.0.0.1:27017/mi_veterinaria?authSource=admin`
+```text
+mongodb://root:rootpass@127.0.0.1:27017/mi_veterinaria?authSource=admin
+```
 
-### 3) Levantar backend
+### 3) Levantar la API
 
 ```bash
 npm run api
@@ -114,7 +115,7 @@ npm run api
 
 API disponible en `http://localhost:3000`.
 
-### 4) Levantar frontend
+### 4) Levantar el frontend
 
 ```bash
 npm start
@@ -122,44 +123,30 @@ npm start
 
 Aplicación disponible en `http://localhost:4200`.
 
-## Datos de prueba
+## Datos iniciales
 
-En el primer arranque se generan datos semilla.
+En el primer arranque se cargan datos semilla para facilitar las pruebas.
 
 Credenciales iniciales:
 
 - Correo: `admin@vet.com`
 - Contraseña: `Admin123*`
 
-## Estructura del proyecto
+## Archivos clave
 
-```text
-mi_app/
-	server/   # API Express, modelos Mongoose y rutas
-	src/      # Frontend Angular
-	docker/   # Archivos de apoyo para MongoDB local
-```
+- `FRONTEND/src/app/core/auth.service.ts`
+- `FRONTEND/src/app/core/auth.guard.ts`
+- `FRONTEND/src/app/core/auth.interceptor.ts`
+- `FRONTEND/src/app/pages/dashboard.component.ts`
+- `BACKEND/server.js`
+- `BACKEND/db.js`
+- `BACKEND/routes/auth.js`
+- `BACKEND/middleware/auth.js`
+- `BACKEND/routes/dashboard.js`
 
-## Archivos clave para entender el flujo
+## Texto corto para presentación
 
-- `src/app/pages/login.component.ts`
-- `src/app/core/auth.service.ts`
-- `src/app/core/auth.guard.ts`
-- `src/app/core/auth.interceptor.ts`
-- `src/app/pages/records.component.ts`
-- `server/routes/auth.js`
-- `server/middleware/auth.js`
-- `server/routes/records.js`
-
-## Acceso al proyecto
-
-1. Clona el repositorio.
-2. Entra a la carpeta `mi_app`.
-3. Ejecuta los comandos de instalación y arranque de esta guía.
-
-## Contribución
-
-Si deseas contribuir, abre un issue con el cambio propuesto o envía un pull request con una descripción clara del ajuste.
+VetCore es una plataforma veterinaria de gestión integral que combina autenticación segura, administración de pacientes y dueños, control de citas y seguimiento clínico en una sola interfaz. Su arquitectura separa frontend, backend y base de datos, lo que facilita mantenimiento, escalabilidad y control de acceso.
 
 ## Autoría
 
