@@ -1,0 +1,6 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const login = async (req, res) => { const { email, password } = req.body; if (!email || !password) return res.status(400).json({ message: 'Correo y contraseña son obligatorios' }); const user = await User.findOne({ email: email.toLowerCase().trim(), active: true }); if (!user) return res.status(401).json({ message: 'Credenciales inválidas' }); const passwordMatches = await bcrypt.compare(password, user.passwordHash); if (!passwordMatches) return res.status(401).json({ message: 'Credenciales inválidas' }); const token = jwt.sign({ sub: user._id.toString(), role: user.role, fullName: user.fullName, email: user.email }, process.env.JWT_SECRET || 'mi-veterinaria-secret', { expiresIn: '8h' }); return res.json({ token, user: { _id: user._id, fullName: user.fullName, email: user.email, role: user.role } }); };
+const getMe = async (req, res) => { const user = await User.findById(req.auth.sub).select('fullName email role'); if (!user) return res.status(404).json({ message: 'Usuario no encontrado' }); return res.json(user); };
+module.exports = { login, getMe };

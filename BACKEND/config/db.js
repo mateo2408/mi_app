@@ -1,6 +1,6 @@
 // Conexión central a MongoDB usando Mongoose.
 const mongoose = require('mongoose');
-const { seedDatabase } = require('./seed');
+const { seedDatabase } = require('../seed');
 
 async function connectDatabase() {
   // Prioriza variable de entorno para soportar distintos ambientes.
