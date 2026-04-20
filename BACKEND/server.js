@@ -59,9 +59,17 @@ async function startServer() {
   // 5. Configurar Express para servir el Frontend (Angular) compilado
   const path = require('path');
   const fs = require('fs');
-  const angularDistPath = path.join(__dirname, '../dist/mi_app/browser');
-  const angularIndexPath = path.join(angularDistPath, 'index.html');
-  const hasFrontendBuild = fs.existsSync(angularIndexPath);
+  const frontendCandidates = [
+    path.join(__dirname, '../dist/mi_app/browser/index.html'),
+    path.join(process.cwd(), 'dist/mi_app/browser/index.html'),
+    path.join(__dirname, '../../dist/mi_app/browser/index.html')
+  ];
+
+  const angularIndexPath = frontendCandidates.find((candidatePath) => fs.existsSync(candidatePath));
+  const hasFrontendBuild = Boolean(angularIndexPath);
+  const angularDistPath = hasFrontendBuild ? path.dirname(angularIndexPath) : null;
+
+  console.log('[frontend] Build detectado:', hasFrontendBuild ? angularIndexPath : 'no encontrado');
 
   if (hasFrontendBuild) {
     app.use(express.static(angularDistPath));
