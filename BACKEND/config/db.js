@@ -11,14 +11,21 @@ const { seedDiagnostics } = require('../seed_diagnostics');
  */
 const connectDatabase = async () => {
   try {
-    // Prioriza variable de entorno; si no existe, usa Atlas con la base mi_veterinaria.
     const connectionString =
       process.env.MONGODB_URI ||
-      'mongodb+srv://adminudla:UDLA@clusterudla01.iguvh9b.mongodb.net/mi_veterinaria?retryWrites=true&w=majority&appName=ClusterUDLA01';
+      'mongodb://root:rootpass@127.0.0.1:27017/mi_veterinaria?authSource=admin';
+
+    if (!process.env.MONGODB_URI) {
+      console.warn('MONGODB_URI no definida. Usando MongoDB local por defecto.');
+    }
     
     mongoose.set('strictQuery', false); // Evita advertencias de Mongoose 7+
-    
-    await mongoose.connect(connectionString);
+
+    await mongoose.connect(connectionString, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 30000
+    });
     console.log('Base de datos conectada exitosamente');
     
     // Carga de datos iniciales necesarios para el funcionamiento

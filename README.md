@@ -122,7 +122,7 @@ mongodb://root:rootpass@127.0.0.1:27017/mi_veterinaria?authSource=admin
 Cadena Atlas configurada en el proyecto como fallback:
 
 ```text
-mongodb+srv://adminudla:UDLA@clusterudla01.iguvh9b.mongodb.net/mi_veterinaria?retryWrites=true&w=majority&appName=ClusterUDLA01
+mongodb+srv://<usuario>:<password>@<cluster-url>/mi_veterinaria?retryWrites=true&w=majority&appName=<app-name>
 ```
 
 Si usas Atlas, puedes omitir Docker y definir `MONGODB_URI` en tu `.env`.
