@@ -61,8 +61,11 @@ async function startServer() {
   const fs = require('fs');
   const frontendCandidates = [
     path.join(__dirname, '../dist/mi_app/browser/index.html'),
+    path.join(__dirname, '../dist/mi_app/browser/index.csr.html'),
     path.join(process.cwd(), 'dist/mi_app/browser/index.html'),
-    path.join(__dirname, '../../dist/mi_app/browser/index.html')
+    path.join(process.cwd(), 'dist/mi_app/browser/index.csr.html'),
+    path.join(__dirname, '../../dist/mi_app/browser/index.html'),
+    path.join(__dirname, '../../dist/mi_app/browser/index.csr.html')
   ];
 
   const angularIndexPath = frontendCandidates.find((candidatePath) => fs.existsSync(candidatePath));
