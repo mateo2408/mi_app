@@ -1,0 +1,8 @@
+{
+  "/api": {
+    "target": "https://tu-backend-render.onrender.com",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  }
+}

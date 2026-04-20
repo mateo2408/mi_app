@@ -11,30 +11,33 @@ const { seedDiagnostics } = require('../seed_diagnostics');
  */
 const connectDatabase = async () => {
   try {
-    const connectionString =
-      process.env.MONGODB_URI ||
-      'mongodb://root:rootpass@127.0.0.1:27017/mi_veterinaria?authSource=admin';
+    const connectionString = process.env.MONGODB_URI;
+    const maxPoolSize = Number(process.env.MONGO_MAX_POOL_SIZE || 20);
+    const minPoolSize = Number(process.env.MONGO_MIN_POOL_SIZE || 2);
 
-    if (!process.env.MONGODB_URI) {
-      console.warn('MONGODB_URI no definida. Usando MongoDB local por defecto.');
+    if (!connectionString) {
+      throw new Error('MONGODB_URI no definida. Configura la cadena de MongoDB Atlas en el archivo .env');
     }
     
     mongoose.set('strictQuery', false); // Evita advertencias de Mongoose 7+
 
     await mongoose.connect(connectionString, {
+      maxPoolSize,
+      minPoolSize,
+      maxIdleTimeMS: 30000,
+      waitQueueTimeoutMS: 5000,
       serverSelectionTimeoutMS: 5000,
       connectTimeoutMS: 10000,
       socketTimeoutMS: 30000
     });
-    console.log('Base de datos conectada exitosamente');
+    console.log('Base de datos Atlas conectada exitosamente');
     
     // Carga de datos iniciales necesarios para el funcionamiento
     await seedDatabase();
     await seedDiagnostics();
     
   } catch (err) {
-    // En arquitecturas de contenedores, si la BD no conecta, es preferible matar el proceso y que Docker reinicie el contenedor.
-    console.error('Fallo critico al conectar la BD:', err.message);
+    console.error('Fallo critico al conectar la BD en Atlas:', err.message);
     process.exit(1); 
   }
 };

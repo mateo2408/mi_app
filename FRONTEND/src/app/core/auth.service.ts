@@ -59,10 +59,35 @@ export class AuthService {
 
     try {
       const parsedValue = JSON.parse(storedValue) as AuthSession;
+
+      if (this.isTokenExpired(parsedValue.token)) {
+        localStorage.removeItem(storageKey);
+        return;
+      }
+
       this.user.set(parsedValue.user);
       this.token.set(parsedValue.token);
     } catch {
       localStorage.removeItem(storageKey);
+    }
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const [, payload] = token.split('.');
+      if (!payload) {
+        return true;
+      }
+
+      const parsedPayload = JSON.parse(atob(payload)) as { exp?: number };
+      if (!parsedPayload.exp) {
+        return false;
+      }
+
+      const nowInSeconds = Math.floor(Date.now() / 1000);
+      return parsedPayload.exp <= nowInSeconds;
+    } catch {
+      return true;
     }
   }
 

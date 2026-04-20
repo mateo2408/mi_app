@@ -49,9 +49,21 @@ const { seedDiagnostics } = require('../seed_diagnostics');
 
 const connectDatabase = async () => {
   try {
-    const connectionString = process.env.MONGODB_URI || 'mongodb://localhost:27017/mi_veterinaria';
-    await mongoose.connect(connectionString);
-    console.log('MongoDB conectado en el contenedor Docker');
+        const connectionString = process.env.MONGODB_URI;
+        if (!connectionString) {
+            throw new Error('MONGODB_URI no definida para Atlas');
+        }
+
+        await mongoose.connect(connectionString, {
+            maxPoolSize: Number(process.env.MONGO_MAX_POOL_SIZE || 20),
+            minPoolSize: Number(process.env.MONGO_MIN_POOL_SIZE || 2),
+            maxIdleTimeMS: 30000,
+            waitQueueTimeoutMS: 5000,
+            serverSelectionTimeoutMS: 5000,
+            connectTimeoutMS: 10000,
+            socketTimeoutMS: 30000
+        });
+        console.log('MongoDB Atlas conectado');
     
     await seedDatabase();
     // Inyecta el catálogo y diagnósticos de prueba para los outbreaks

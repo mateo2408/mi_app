@@ -29,11 +29,14 @@ async function startServer() {
 
   const app = express();
   const port = process.env.PORT || 3000;
+  const corsOrigin = process.env.CORS_ORIGIN;
 
   // 2. Configuracion de Middlewares Globales
   app.use(
     cors({
-      origin: process.env.CORS_ORIGIN || 'http://localhost:4200'
+      origin: corsOrigin
+        ? corsOrigin.split(',').map((origin) => origin.trim())
+        : true
     })
   );
   // express.json() permite que el servidor entienda peticiones con body en formato JSON
