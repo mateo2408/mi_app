@@ -58,13 +58,27 @@ async function startServer() {
 
   // 5. Configurar Express para servir el Frontend (Angular) compilado
   const path = require('path');
+  const fs = require('fs');
   const angularDistPath = path.join(__dirname, '../dist/mi_app/browser');
-  app.use(express.static(angularDistPath));
+  const angularIndexPath = path.join(angularDistPath, 'index.html');
+  const hasFrontendBuild = fs.existsSync(angularIndexPath);
+
+  if (hasFrontendBuild) {
+    app.use(express.static(angularDistPath));
+  }
 
   // Cualquier ruta que no sea de la API (/api/...) devolverá la vista principal de Angular
   app.use((req, res, next) => {
     if (req.method === 'GET' && !req.path.startsWith('/api')) {
-      res.sendFile(path.join(angularDistPath, 'index.html'));
+      if (hasFrontendBuild) {
+        res.sendFile(angularIndexPath);
+      } else {
+        res.status(200).json({
+          service: 'vetcore-api',
+          status: 'ok',
+          message: 'Backend desplegado correctamente. El frontend no esta disponible en este servicio.'
+        });
+      }
     } else {
       next();
     }
