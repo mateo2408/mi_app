@@ -23,14 +23,17 @@ fs.writeFileSync('FRONTEND/src/app/core/diagnosis.service.ts', `import { Injecta
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Disease, Diagnosis, DiagnosisResponse } from './diagnosis.models';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class DiagnosisService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api/diagnostics';
+  private authService = inject(AuthService);
+  private apiUrl = `${environment.apiBaseUrl}/diagnostics`;
 
   private getAuthHeaders() {
-    const token = localStorage.getItem('auth_token') || '';
+    const token = this.authService.getToken() || '';
     return new HttpHeaders({ 'Authorization': 'Bearer ' + token });
   }
 

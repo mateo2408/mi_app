@@ -82,6 +82,18 @@ mi_app/
 - `npm run test`: ejecuta pruebas del frontend.
 - `npm run serve:ssr:mi_app`: ejecuta la versión SSR compilada.
 
+## Despliegue en Netlify
+
+Esta configuración está pensada para trabajar en local con la API corriendo en tu terminal.
+
+1. Sube el proyecto a GitHub si quieres conservar control de versiones.
+2. En Netlify, conecta el repositorio y usa `npm run build` como build command.
+3. Publica la carpeta `dist/mi_app/browser`.
+4. Mantén la API corriendo localmente con `npm run api`.
+5. Netlify redirige `/api/*` a `http://localhost:3000/api/*` mientras desarrollas en tu máquina.
+
+Importante: esto funciona para desarrollo local. Un sitio publicado en Netlify no puede consumir el `localhost` de tu computadora desde Internet.
+
 ## Requisitos previos
 
 - Node.js y npm.
@@ -143,6 +155,9 @@ Credenciales iniciales:
 - `BACKEND/routes/auth.js`
 - `BACKEND/middleware/auth.js`
 - `BACKEND/routes/dashboard.js`
+- `netlify.toml`
+- `FRONTEND/src/environments/environment.ts`
+- `FRONTEND/src/environments/environment.prod.ts`
 
 ## Texto corto para presentación
 

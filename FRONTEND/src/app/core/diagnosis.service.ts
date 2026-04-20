@@ -7,6 +7,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Disease, Diagnosis, DiagnosisResponse } from './diagnosis.models';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 /**
  * El decorador @Injectable permite que esta clase sea inyectada
@@ -18,15 +20,16 @@ import { Disease, Diagnosis, DiagnosisResponse } from './diagnosis.models';
 export class DiagnosisService {
   // Cliente HTTP integrado en Angular
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
   // URL base estandarizada del backend (express)
-  private apiUrl = 'http://localhost:3000/api/diagnostics';
+  private apiUrl = `${environment.apiBaseUrl}/diagnostics`;
 
   /**
    * Construye los encabezados HTTP agregando el token JWT 
    * guardado en LocalStorage para validar la identidad en el backend.
    */
   private getAuthHeaders() {
-    const token = localStorage.getItem('auth_token') || '';
+    const token = this.authService.getToken() || '';
     return new HttpHeaders({
       'Authorization': 'Bearer ' + token
     });

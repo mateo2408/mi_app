@@ -8,8 +8,9 @@ import {
   Owner,
   Pet,
 } from './models';
+import { environment } from '../../environments/environment';
 
-const apiBaseUrl = 'http://localhost:3000/api';
+const apiBaseUrl = environment.apiBaseUrl;
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {

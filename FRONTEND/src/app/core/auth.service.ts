@@ -7,8 +7,8 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { map, tap } from 'rxjs';
 import { AuthSession, AuthUser, LoginRequest } from './models';
+import { environment } from '../../environments/environment';
 
-const apiBaseUrl = 'http://localhost:3000/api';
 const storageKey = 'mi_veterinaria_session';
 
 @Injectable({ providedIn: 'root' })
@@ -27,7 +27,7 @@ export class AuthService {
 
   login(payload: LoginRequest) {
     // El backend responde con token + usuario.
-    return this.http.post<AuthSession>(`${apiBaseUrl}/auth/login`, payload).pipe(
+    return this.http.post<AuthSession>(`${environment.apiBaseUrl}/auth/login`, payload).pipe(
       tap((session) => this.saveSession(session)),
       map((session) => session.user)
     );
