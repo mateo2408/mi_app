@@ -59,8 +59,12 @@ async function startServer() {
   app.use(express.static(angularDistPath));
 
   // Cualquier ruta que no sea de la API (/api/...) devolverá la vista principal de Angular
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(angularDistPath, 'index.html'));
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+      res.sendFile(path.join(angularDistPath, 'index.html'));
+    } else {
+      next();
+    }
   });
 
   // 6. Middleware para manejo de errores globales
