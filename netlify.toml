@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://mi-app-ru0u.onrender.com"
+  to = "https://mi-app-ru0u.onrender.com/:splat"
   status = 200
   force = true
 
