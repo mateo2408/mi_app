@@ -53,8 +53,18 @@ async function startServer() {
   app.use('/api/records', recordsRoutes);
   app.use('/api/diagnostics', diagnosticsRoutes);
 
-  // 5. Middleware para manejo de errores globales
-  // Captura cualquier error no manejado en las rutas anteriores
+  // 5. Configurar Express para servir el Frontend (Angular) compilado
+  const path = require('path');
+  const angularDistPath = path.join(__dirname, '../dist/mi_app/browser');
+  app.use(express.static(angularDistPath));
+
+  // Cualquier ruta que no sea de la API (/api/...) devolverá la vista principal de Angular
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(angularDistPath, 'index.html'));
+  });
+
+  // 6. Middleware para manejo de errores globales
+  // Captura cualquier error no manejado en las rutas de API
   app.use((error, _req, res, _next) => {
     console.error('Error no capturado:', error);
     res.status(500).json({ message: 'Error interno del servidor' });
