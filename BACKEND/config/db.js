@@ -11,8 +11,10 @@ const { seedDiagnostics } = require('../seed_diagnostics');
  */
 const connectDatabase = async () => {
   try {
-    // Si no existe la variable de entorno, usa una cadena por defecto compatible con el contenedor Docker
-    const connectionString = process.env.MONGODB_URI || 'mongodb://root:rootpass@127.0.0.1:27017/mi_veterinaria?authSource=admin';
+    // Prioriza variable de entorno; si no existe, usa Atlas con la base mi_veterinaria.
+    const connectionString =
+      process.env.MONGODB_URI ||
+      'mongodb+srv://adminudla:UDLA@clusterudla01.iguvh9b.mongodb.net/mi_veterinaria?retryWrites=true&w=majority&appName=ClusterUDLA01';
     
     mongoose.set('strictQuery', false); // Evita advertencias de Mongoose 7+
     

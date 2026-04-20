@@ -113,11 +113,19 @@ npm install
 docker compose up -d --build
 ```
 
-Cadena local usada por defecto:
+Cadena local usada por Docker:
 
 ```text
 mongodb://root:rootpass@127.0.0.1:27017/mi_veterinaria?authSource=admin
 ```
+
+Cadena Atlas configurada en el proyecto como fallback:
+
+```text
+mongodb+srv://adminudla:UDLA@clusterudla01.iguvh9b.mongodb.net/mi_veterinaria?retryWrites=true&w=majority&appName=ClusterUDLA01
+```
+
+Si usas Atlas, puedes omitir Docker y definir `MONGODB_URI` en tu `.env`.
 
 ### 3) Levantar la API
 
@@ -166,3 +174,21 @@ VetCore es una plataforma veterinaria de gestión integral que combina autentica
 ## Autoría
 
 Desarrollado por Mateo Cisneros.
+
+## Configuración rápida en la nube (gratis)
+
+1. MongoDB Atlas:
+	- Crea un cluster free.
+	- Crea usuario de base de datos.
+	- En Network Access permite `0.0.0.0/0` temporalmente (o solo IPs necesarias).
+	- Usa una cadena `MONGODB_URI` con nombre de base `mi_veterinaria`.
+2. Backend en Render:
+	- Crea un Web Service conectado a GitHub.
+	- Root directory: `mi_app`.
+	- Build command: `npm install`.
+	- Start command: `npm run api`.
+	- Variables: `MONGODB_URI`, `JWT_SECRET`, `CORS_ORIGIN`.
+3. Frontend en Netlify:
+	- Build command: `npm run build`.
+	- Publish directory: `dist/mi_app/browser`.
+	- Si apuntas a backend público, no uses `localhost` en redirects de `/api/*`.
