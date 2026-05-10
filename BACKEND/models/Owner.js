@@ -8,6 +8,13 @@ const ownerSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+      cedula: {
+        type: String,
+        trim: true,
+        unique: true,
+        sparse: true,
+        default: ''
+      },
     phone: {
       type: String,
       default: ''
@@ -19,6 +26,22 @@ const ownerSchema = new mongoose.Schema(
     address: {
       type: String,
       default: ''
+    }
+    ,
+    country: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Country',
+      default: null
+    },
+    province: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Province',
+      default: null
+    },
+    city: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'City',
+      default: null
     }
   },
   {

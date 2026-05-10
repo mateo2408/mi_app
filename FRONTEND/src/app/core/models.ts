@@ -25,7 +25,25 @@ export interface Owner extends Identified {
   phone: string;
   email: string;
   address: string;
+  cedula?: string;
+  country?: string;
+  province?: string;
+  city?: string;
   createdAt?: string;
+}
+
+export interface Country extends Identified {
+  name: string;
+}
+
+export interface Province extends Identified {
+  name: string;
+  country: string | Country;
+}
+
+export interface City extends Identified {
+  name: string;
+  province: string | Province;
 }
 
 export interface Pet extends Identified {

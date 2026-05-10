@@ -21,9 +21,24 @@ import { Owner } from '../core/models';
 
       <form class="card form" [formGroup]="form" (ngSubmit)="save()">
         <input formControlName="fullName" placeholder="Nombre completo" />
+        <input formControlName="cedula" placeholder="Cédula / Documento" />
         <input formControlName="phone" placeholder="Teléfono" />
         <input formControlName="email" type="email" placeholder="Correo" />
         <input formControlName="address" placeholder="Dirección" />
+
+        <select formControlName="country" (change)="onCountryChange($event)">
+          <option value="">Selecciona un país</option>
+          <option *ngFor="let c of countries" [value]="c._id">{{ c.name }}</option>
+        </select>
+        <select formControlName="province" (change)="onProvinceChange($event)">
+          <option value="">Selecciona una provincia</option>
+          <option *ngFor="let p of provinces" [value]="p._id">{{ p.name }}</option>
+        </select>
+        <select formControlName="city">
+          <option value="">Selecciona una ciudad</option>
+          <option *ngFor="let city of cities" [value]="city._id">{{ city.name }}</option>
+        </select>
+
         <button type="submit" [disabled]="form.invalid || loading">Agregar dueño</button>
       </form>
 
@@ -147,13 +162,20 @@ export class OwnersComponent {
   owners: Owner[] = [];
   loading = false;
   errorMessage = '';
+  countries: any[] = [];
+  provinces: any[] = [];
+  cities: any[] = [];
 
   // Formulario de creación rápida de dueño.
   readonly form = this.fb.nonNullable.group({
     fullName: ['', Validators.required],
+    cedula: [''],
     phone: [''],
     email: [''],
-    address: ['']
+    address: [''],
+    country: [''],
+    province: [''],
+    city: ['']
   });
 
   constructor() {
@@ -166,10 +188,29 @@ export class OwnersComponent {
 
     try {
       this.owners = await firstValueFrom(this.apiService.listOwners());
+      this.countries = await firstValueFrom(this.apiService.listCountries());
     } catch {
       this.owners = [];
       this.errorMessage = 'No se pudieron cargar los dueños. Verifica que la API esté encendida y tu sesión siga activa.';
     }
+  }
+
+  async onCountryChange(event: Event): Promise<void> {
+    const countryId = (event.target as HTMLSelectElement)?.value ?? '';
+    this.provinces = [];
+    this.cities = [];
+    if (!countryId) return;
+    this.provinces = await firstValueFrom(this.apiService.listProvinces(countryId));
+    // clear selection in form
+    this.form.patchValue({ province: '', city: '' });
+  }
+
+  async onProvinceChange(event: Event): Promise<void> {
+    const provinceId = (event.target as HTMLSelectElement)?.value ?? '';
+    this.cities = [];
+    if (!provinceId) return;
+    this.cities = await firstValueFrom(this.apiService.listCities(provinceId));
+    this.form.patchValue({ city: '' });
   }
 
   async save(): Promise<void> {
@@ -183,6 +224,8 @@ export class OwnersComponent {
       const owner = await firstValueFrom(this.apiService.createOwner(this.form.getRawValue()));
       this.owners = [owner, ...this.owners];
       this.form.reset();
+      this.provinces = [];
+      this.cities = [];
     } finally {
       this.loading = false;
     }

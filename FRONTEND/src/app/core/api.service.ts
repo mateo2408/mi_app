@@ -80,4 +80,17 @@ export class ApiService {
   deleteRecord(id: string) {
     return this.http.delete<{ message: string }>(`${apiBaseUrl}/records/${id}`);
   }
+
+  // Locations (countries / provinces / cities)
+  listCountries() {
+    return this.http.get<any[]>(`${apiBaseUrl}/locations/countries`);
+  }
+
+  listProvinces(countryId: string) {
+    return this.http.get<any[]>(`${apiBaseUrl}/locations/provinces`, { params: { countryId } });
+  }
+
+  listCities(provinceId: string) {
+    return this.http.get<any[]>(`${apiBaseUrl}/locations/cities`, { params: { provinceId } });
+  }
 }
