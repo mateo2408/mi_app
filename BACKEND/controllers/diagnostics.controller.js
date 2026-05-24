@@ -1,76 +1,139 @@
 /**
- * @StudyGuide [CONTROLADOR] Patrón MVC - Layer de Lógica de Aplicación
- * Responsabilidad: Orquestar el flujo desde que el Cliente (Angular) manda un diagnóstico
- * hasta que se almacena y se calculan las reglas de epidemiología para reabastecimiento.
- * No accede a DB directo, usa Repositorios (CORE).
+ * CONTROLADOR: Diagnostics
+ * 
+ * Responsabilidad: Orquestar el flujo HTTP para diagnósticos.
+ * Delega la lógica de negocio al CORE (OutbreakAnalyzer, DiseaseService, etc).
+ * 
+ * Este controlador es PURO CRUD + orquestación, sin lógica de negocio.
  */
-const DiagnosisRepo = require('../../CORE/diagnosis.repository');
-const DiseaseRepo = require('../../CORE/disease.repository');
+
+const { repositories, outbreakAnalyzer, diseaseService, epidemicComparator } = require('../../CORE');
 
 /**
- * @StudyGuide [CORE INTELIGENCIA - LOGICA DE 6 CASOS]
- * Registra un diagnóstico y evalúa estadísticamente si se superan los 6 casos en los últimos 60 días
- * para activar una alerta preventiva de Reabastecimiento de Farmacia.
+ * Registra un nuevo diagnóstico y analiza si hay brote epidemiológico.
+ * 
+ * Flujo:
+ * 1. Guardar diagnosis en BD
+ * 2. Delegar análisis epidemiológico al CORE
+ * 3. Retornar resultado + alerta si procede
  */
 const createDiagnostic = async (req, res) => {
     try {
         const { petName, diseaseId } = req.body;
-        
-        // 1. Guardar (Persistir) el nuevo caso de diagnóstico.
-        const diagnosis = await DiagnosisRepo.create({ petName, diseaseId });
 
-        // 2. Traer los metadatos de la enfermedad (contiene la cura/medicamento).
-        const disease = await DiseaseRepo.findById(diseaseId);
-        if(!disease) {
-            return res.status(404).json({ message: 'Enfermedad no catalogada.' });
+        if (!petName || !diseaseId) {
+            return res.status(400).json({ message: 'petName y diseaseId son requeridos' });
         }
 
-        // 3. Consultar la ventana epidemiológica (últimos 60 días).
-        const recentRecords = await DiagnosisRepo.findRecentByDisease(diseaseId, 60);
+        // 1. Guardar el diagnóstico en BD (CRUD básico)
+        const diagnosis = await repositories.DiagnosisRepository.create({ petName, diseaseId });
 
-        // 4. Conteo para determinar la frecuencia.
-        let outbreakCount = 0;
-        recentRecords.forEach(() => outbreakCount++);
+        // 2. LÓGICA DE NEGOCIO: Analizar brote epidemiológico (delegado al CORE)
+        const outbreakAnalysis = await outbreakAnalyzer.analyzeDisease(diseaseId);
 
-        // 5. Lógica de Regla de Negocio (Si supera 6 casos = Alerta de Reabastecimiento)
-        let alert = null;
-        // Obligamos el requerimiento del negocio a 6 casos (o el del modelo si existe)
-        const threshold = disease.outbreakThreshold || 6; 
-
-        if (outbreakCount >= threshold) {
-            // Umbral alcanzado: Retorna respuesta enriquecida
-            alert = {
-                message: `ALERTA EPIDEMIOLÓGICA: ${outbreakCount} casos de ${disease.name} detectados. Reabastecer inmediatamente almacén con: ${disease.medication}`,
-                status: true,
-                activeCases: outbreakCount,
-                diseaseName: disease.name,
-                recommendation: `Comprar Lote de ${disease.medication}`
-            };
+        if (!outbreakAnalysis.diseaseInfo) {
+            return res.status(404).json({ message: 'Enfermedad no encontrada' });
         }
 
-        // 6. Enviar JSON estructurado (RESTful) al Frontend (VISTA)
+        // 3. Retornar respuesta con análisis
         return res.status(201).json({
             diagnosis,
-            alert,
+            outbreakAnalysis,
+            alert: outbreakAnalysis.alert,
             message: 'Diagnóstico registrado exitosamente.'
         });
     } catch (err) {
-        console.error('[Error CreateDiagnostic]:', err);
-        return res.status(500).json({ message: 'Error procesando el flujo de diagnóstico.' });
+        console.error('[Diagnostics Controller] Error en createDiagnostic:', err);
+        return res.status(500).json({ message: 'Error procesando el diagnóstico.' });
     }
 };
 
 /**
- * Obtiene el catalogo completo de enfermedades.
+ * Obtiene todas las enfermedades catalogadas.
  */
 const getDiseases = async (_req, res) => {
     try {
-        const diseases = await DiseaseRepo.findAll();
+        const diseases = await diseaseService.getAllDiseases();
         return res.json(diseases);
     } catch (err) {
-        console.error('Error en getDiseases:', err);
-        return res.status(500).json({ message: 'No se pudo obtener el catalogo.' });
+        console.error('[Diagnostics Controller] Error en getDiseases:', err);
+        return res.status(500).json({ message: 'No se pudo obtener el catálogo.' });
     }
 };
 
-module.exports = { createDiagnostic, getDiseases };
+/**
+ * Obtiene enfermedades críticas (alto riesgo de brote).
+ */
+const getCriticalDiseases = async (_req, res) => {
+    try {
+        const diseases = await diseaseService.getCriticalDiseases();
+        return res.json(diseases);
+    } catch (err) {
+        console.error('[Diagnostics Controller] Error en getCriticalDiseases:', err);
+        return res.status(500).json({ message: 'Error obteniendo enfermedades críticas.' });
+    }
+};
+
+/**
+ * Analiza brote de una enfermedad específica.
+ */
+const analyzeOutbreak = async (req, res) => {
+    try {
+        const { diseaseId } = req.params;
+        const analysis = await outbreakAnalyzer.analyzeDisease(diseaseId);
+        return res.json(analysis);
+    } catch (err) {
+        console.error('[Diagnostics Controller] Error en analyzeOutbreak:', err);
+        return res.status(500).json({ message: 'Error analizando brote.' });
+    }
+};
+
+/**
+ * Analiza todos los brotes activos.
+ */
+const analyzeAllOutbreaks = async (_req, res) => {
+    try {
+        const analysis = await outbreakAnalyzer.analyzeAllDiseases();
+        return res.json(analysis);
+    } catch (err) {
+        console.error('[Diagnostics Controller] Error en analyzeAllOutbreaks:', err);
+        return res.status(500).json({ message: 'Error analizando brotes.' });
+    }
+};
+
+/**
+ * Compara epidemiología entre dos enfermedades.
+ */
+const compareEpidemiology = async (req, res) => {
+    try {
+        const { diseaseId1, diseaseId2 } = req.params;
+        const comparison = await epidemicComparator.compareDisease(diseaseId1, diseaseId2);
+        return res.json(comparison);
+    } catch (err) {
+        console.error('[Diagnostics Controller] Error en compareEpidemiology:', err);
+        return res.status(500).json({ message: 'Error comparando epidemiología.' });
+    }
+};
+
+/**
+ * Obtiene un reporte epidemiológico completo.
+ */
+const getEpidemicReport = async (_req, res) => {
+    try {
+        const report = await epidemicComparator.generateEpidemicReport();
+        return res.json(report);
+    } catch (err) {
+        console.error('[Diagnostics Controller] Error en getEpidemicReport:', err);
+        return res.status(500).json({ message: 'Error generando reporte epidemiológico.' });
+    }
+};
+
+module.exports = {
+    createDiagnostic,
+    getDiseases,
+    getCriticalDiseases,
+    analyzeOutbreak,
+    analyzeAllOutbreaks,
+    compareEpidemiology,
+    getEpidemicReport
+};
