@@ -78,6 +78,19 @@ class EpidemicComparator {
 
         const totalCases = analysis.analysisResults.reduce((sum, r) => sum + r.caseCount, 0);
         const avgCasesPerDisease = totalCases / analysis.analysisResults.length;
+        const outbreakAlerts = analysis.analysisResults
+            .filter((result) => result.isOutbreak && result.alert)
+            .map((result) => result.alert);
+        const outbreakMedicationStatus = analysis.analysisResults
+            .filter((result) => result.isOutbreak && result.medicationAvailability)
+            .map((result) => ({
+                disease: result.diseaseInfo.name,
+                medication: result.medicationAvailability.medication,
+                available: result.medicationAvailability.available,
+                minStock: result.medicationAvailability.minStock,
+                unit: result.medicationAvailability.unit,
+                status: result.medicationAvailability.status
+            }));
 
         return {
             summary: {
@@ -90,7 +103,9 @@ class EpidemicComparator {
             },
             classification: classified,
             timestamp: new Date().toISOString(),
-            recommendations: this._generateRecommendations(classified, analysis)
+            recommendations: this._generateRecommendations(classified, analysis, outbreakMedicationStatus),
+            outbreakAlerts,
+            outbreakMedicationStatus
         };
     }
 
@@ -133,8 +148,23 @@ class EpidemicComparator {
      * Genera recomendaciones basadas en análisis
      * @private
      */
-    _generateRecommendations(classified, analysis) {
+    _generateRecommendations(classified, analysis, outbreakMedicationStatus = []) {
         const recommendations = [];
+
+        const criticalStock = outbreakMedicationStatus.filter((item) => item.status === 'out' || item.status === 'missing');
+        const lowStock = outbreakMedicationStatus.filter((item) => item.status === 'low');
+
+        if (criticalStock.length > 0) {
+            recommendations.push({
+                priority: 'URGENT',
+                action: `Stock agotado para brotes: ${criticalStock.map((item) => item.medication).join(', ')}`
+            });
+        } else if (lowStock.length > 0) {
+            recommendations.push({
+                priority: 'HIGH',
+                action: `Stock bajo para brotes: ${lowStock.map((item) => item.medication).join(', ')}`
+            });
+        }
 
         if (classified.outbreaks.length > 0) {
             recommendations.push({

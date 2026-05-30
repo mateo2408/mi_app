@@ -18,6 +18,7 @@ const appointmentsRoutes = require('./routes/appointments');
 const recordsRoutes = require('./routes/records');
 const diagnosticsRoutes = require('./routes/diagnostics');
 const locationsRoutes = require('./routes/locations');
+const inventoryRoutes = require('./routes/inventory');
 
 /**
  * Funcion asincrona para inicializar el servidor.
@@ -57,6 +58,7 @@ async function startServer() {
   app.use('/api/records', recordsRoutes);
   app.use('/api/diagnostics', diagnosticsRoutes);
   app.use('/api/locations', locationsRoutes);
+  app.use('/api/inventory', inventoryRoutes);
 
   // 5. Configurar Express para servir el Frontend (Angular) compilado
   const path = require('path');

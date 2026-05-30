@@ -11,7 +11,7 @@ const Appointment = require('../models/Appointment');
 const ClinicalRecord = require('../models/ClinicalRecord');
 const Owner = require('../models/Owner');
 const Pet = require('../models/Pet');
-const { epidemicComparator } = require('../../CORE');
+const { epidemicComparator, inventoryService } = require('../../CORE');
 
 /**
  * Obtiene el resumen del dashboard central con datos agregados y alertas.
@@ -19,7 +19,7 @@ const { epidemicComparator } = require('../../CORE');
 const getSummary = async (_req, res) => {
     try {
         // 1. Obtener conteos básicos en paralelo
-        const [owners, pets, appointments, records, recentAppointments, recentPets] = await Promise.all([
+        const [owners, pets, appointments, records, recentAppointments, recentPets, inventorySummary, epidemicReport] = await Promise.all([
             Owner.countDocuments(),
             Pet.countDocuments(),
             Appointment.countDocuments(),
@@ -33,11 +33,10 @@ const getSummary = async (_req, res) => {
                 .populate('ownerId', 'fullName')
                 .sort({ createdAt: -1 })
                 .limit(5)
-                .lean()
+                .lean(),
+            inventoryService.getSummary(),
+            epidemicComparator.generateEpidemicReport()
         ]);
-
-        // 2. LÓGICA DE NEGOCIO: Obtener alertas epidemiológicas del CORE
-        const epidemicReport = await epidemicComparator.generateEpidemicReport();
 
         return res.json({
             counts: {
@@ -51,7 +50,10 @@ const getSummary = async (_req, res) => {
             activeOutbreaks: epidemicReport.classification.outbreaks,
             diseasesAtRisk: epidemicReport.classification.atRisk,
             epidemicSummary: epidemicReport.summary,
-            recommendations: epidemicReport.recommendations
+            recommendations: epidemicReport.recommendations,
+            activeAlerts: epidemicReport.outbreakAlerts,
+            outbreakMedicationStatus: epidemicReport.outbreakMedicationStatus,
+            inventorySummary
         });
     } catch (error) {
         console.error('[Dashboard Controller] Error en getSummary:', error);

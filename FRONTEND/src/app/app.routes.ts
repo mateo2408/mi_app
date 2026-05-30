@@ -12,6 +12,7 @@ import { OwnersComponent } from './pages/owners.component';
 import { PetsComponent } from './pages/pets.component';
 import { RecordsComponent } from './pages/records.component';
 import { DiagnosticsComponent } from './pages/diagnostics.component';
+import { InventoryComponent } from './pages/inventory.component';
 
 export const routes: Routes = [
 	// Redirección por defecto a login.
@@ -31,7 +32,8 @@ export const routes: Routes = [
 			{ path: 'pets', component: PetsComponent },
 			{ path: 'appointments', component: AppointmentsComponent },
 			{ path: 'records', component: RecordsComponent },
-                        { path: 'diagnostics', component: DiagnosticsComponent }
+                        { path: 'diagnostics', component: DiagnosticsComponent },
+                        { path: 'inventory', component: InventoryComponent }
 		]
 	},
 	// Guard-clause para URLs no reconocidas.

@@ -5,6 +5,7 @@ import {
   Appointment,
   ClinicalRecord,
   DashboardSummary,
+  InventoryItem,
   Owner,
   Pet,
 } from './models';
@@ -19,6 +20,19 @@ export class ApiService {
   // Dashboard
   getSummary() {
     return this.http.get<DashboardSummary>(`${apiBaseUrl}/dashboard/summary`);
+  }
+
+  // Inventario
+  listInventory() {
+    return this.http.get<InventoryItem[]>(`${apiBaseUrl}/inventory`);
+  }
+
+  createInventoryItem(payload: Partial<InventoryItem>) {
+    return this.http.post<InventoryItem>(`${apiBaseUrl}/inventory`, payload);
+  }
+
+  updateInventoryItem(id: string, payload: Partial<InventoryItem>) {
+    return this.http.put<InventoryItem>(`${apiBaseUrl}/inventory/${id}`, payload);
   }
 
   // Dueños

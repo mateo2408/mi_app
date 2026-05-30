@@ -12,9 +12,10 @@
  */
 
 class OutbreakAnalyzer {
-    constructor(diagnosisRepository, diseaseRepository) {
+    constructor(diagnosisRepository, diseaseRepository, inventoryService) {
         this.diagnosisRepository = diagnosisRepository;
         this.diseaseRepository = diseaseRepository;
+        this.inventoryService = inventoryService;
     }
 
     /**
@@ -58,10 +59,15 @@ class OutbreakAnalyzer {
 
             const caseCount = recentDiagnoses.length;
 
-            // 4. Determinar si hay brote
+            // 4. Determinar disponibilidad de medicamento en inventario
+            const medicationAvailability = this.inventoryService
+                ? await this.inventoryService.getMedicationAvailability(disease.medication)
+                : null;
+
+            // 5. Determinar si hay brote
             const isOutbreak = caseCount >= effectiveThreshold;
 
-            // 5. Construir respuesta
+            // 6. Construir respuesta
             const result = {
                 isOutbreak,
                 caseCount,
@@ -73,12 +79,13 @@ class OutbreakAnalyzer {
                     medication: disease.medication
                 },
                 recentDiagnoses: recentDiagnoses.slice(0, 10), // Últimos 10 casos
+                medicationAvailability,
                 alert: null
             };
 
-            // 6. Si hay brote, crear alerta
+            // 7. Si hay brote, crear alerta
             if (isOutbreak) {
-                result.alert = this._generateAlert(disease, caseCount, effectiveThreshold);
+                result.alert = this._generateAlert(disease, caseCount, effectiveThreshold, medicationAvailability);
             }
 
             return result;
@@ -153,7 +160,26 @@ class OutbreakAnalyzer {
      * Genera una alerta estructurada
      * @private
      */
-    _generateAlert(disease, caseCount, threshold) {
+    _generateAlert(disease, caseCount, threshold, medicationAvailability) {
+        const inventoryInfo = medicationAvailability
+            ? {
+                medication: medicationAvailability.medication,
+                available: medicationAvailability.available,
+                minStock: medicationAvailability.minStock,
+                unit: medicationAvailability.unit,
+                status: medicationAvailability.status,
+                needsRestock: medicationAvailability.needsRestock
+            }
+            : null;
+
+        const inventoryNote = inventoryInfo
+            ? `Stock actual: ${inventoryInfo.available} ${inventoryInfo.unit} (${this._formatStockStatus(inventoryInfo.status)})`
+            : 'Stock no registrado en inventario';
+
+        const recommendation = inventoryInfo && inventoryInfo.needsRestock
+            ? `Reabastecer ${disease.medication}. ${inventoryNote}`
+            : `Comprar Lote de ${disease.medication}. Casos: ${caseCount}/${threshold}. ${inventoryNote}`;
+
         return {
             type: 'OUTBREAK_ALERT',
             severity: this._calculateSeverity(caseCount, threshold),
@@ -162,7 +188,9 @@ class OutbreakAnalyzer {
             activeCases: caseCount,
             diseaseName: disease.name,
             medication: disease.medication,
-            recommendation: `Comprar Lote de ${disease.medication}. Casos: ${caseCount}/${threshold}`,
+            threshold,
+            recommendation,
+            inventory: inventoryInfo,
             timestamp: new Date().toISOString()
         };
     }
@@ -176,6 +204,17 @@ class OutbreakAnalyzer {
         if (excessRatio >= 2) return 'CRITICAL';
         if (excessRatio >= 1.5) return 'HIGH';
         return 'MEDIUM';
+    }
+
+    /**
+     * Traduce el estado de stock a un mensaje legible
+     * @private
+     */
+    _formatStockStatus(status) {
+        if (status === 'out') return 'agotado';
+        if (status === 'low') return 'bajo';
+        if (status === 'missing') return 'sin registro';
+        return 'suficiente';
     }
 }
 

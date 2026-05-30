@@ -45,18 +45,27 @@ import { Router } from '@angular/router';
            <h3 class="font-bold text-xl text-red-700 mb-4 flex items-center">
               <span class="alert-icon">!</span> Alertas Activas de Brote
            </h3>
-           <div class="alert-grid" *ngIf="summary.activeAlerts && summary.activeAlerts.length > 0; else noAlerts">
-             <div *ngFor="let alert of summary.activeAlerts" class="alert-card">
-               <div class="alert-header">
-                 <h4>Brote: {{ alert.diseaseName }}</h4>
-                 <span class="badge">{{ alert.activeCases }} casos recientes</span>
-               </div>
-               <p class="alert-body">Se supero el limite de {{ alert.threshold }} casos permitidos para los ultimos 60 dias.</p>
-               <div class="alert-footer text-red-600 font-semibold mt-2">
-                 Recomendacion: {{ alert.recommendation }}
-               </div>
-             </div>
-           </div>
+            <div class="alert-grid" *ngIf="summary.activeAlerts && summary.activeAlerts.length > 0; else noAlerts">
+              <div *ngFor="let alert of summary.activeAlerts" class="alert-card">
+                <div class="alert-header">
+                  <h4>Brote: {{ alert.diseaseName }}</h4>
+                  <span class="badge">{{ alert.activeCases }} casos recientes</span>
+                </div>
+                <p class="alert-body">Se supero el limite de {{ alert.threshold }} casos permitidos para los ultimos 60 dias.</p>
+                <div class="alert-footer text-red-600 font-semibold mt-2">
+                  Recomendacion: {{ alert.recommendation }}
+                </div>
+                <div class="inventory-note" *ngIf="alert.inventory; else missingInventory">
+                  Stock disponible: {{ alert.inventory.available }} {{ alert.inventory.unit }}
+                  <span class="inventory-pill" [class]="stockClass(alert.inventory.status)">
+                    {{ stockLabel(alert.inventory.status) }}
+                  </span>
+                </div>
+                <ng-template #missingInventory>
+                  <div class="inventory-note">Stock no registrado en inventario.</div>
+                </ng-template>
+              </div>
+            </div>
            
            <ng-template #noAlerts>
              <div class="text-green-700 bg-green-50 p-4 rounded border border-green-200 w-full font-medium">
@@ -100,6 +109,38 @@ import { Router } from '@angular/router';
           </div>
         </div>
 
+        <div class="inventory-summary" *ngIf="summary.inventorySummary">
+          <div class="inventory-header">
+            <h4>Inventario de Medicamentos</h4>
+            <span>Resumen operativo del stock disponible</span>
+          </div>
+          <div class="inventory-grid">
+            <div class="inventory-card">
+              <p>Total de medicamentos</p>
+              <strong>{{ summary.inventorySummary.totalItems }}</strong>
+            </div>
+            <div class="inventory-card">
+              <p>Unidades disponibles</p>
+              <strong>{{ summary.inventorySummary.totalUnits }}</strong>
+            </div>
+            <div class="inventory-card">
+              <p>Bajo stock</p>
+              <strong>{{ summary.inventorySummary.lowStockCount }}</strong>
+            </div>
+            <div class="inventory-card">
+              <p>Agotados</p>
+              <strong>{{ summary.inventorySummary.outOfStockCount }}</strong>
+            </div>
+          </div>
+          <div class="inventory-low" *ngIf="summary.inventorySummary.lowStockItems.length > 0">
+            <h5>Medicamentos con stock crítico</h5>
+            <div class="inventory-item" *ngFor="let item of summary.inventorySummary.lowStockItems">
+              <span>{{ item.medication }}</span>
+              <span>{{ item.stock }} {{ item.unit }} · mínimo {{ item.minStock }}</span>
+            </div>
+          </div>
+        </div>
+
         <!-- RECENT DATA PANELS -->
         <div class="data-panels mt-8">
           <div class="data-card">
@@ -114,7 +155,7 @@ import { Router } from '@angular/router';
                  </div>
                  <span class="status-badge">{{ item.status }}</span>
               </div>
-              <div *ngIf="summary.recentAppointments?.length === 0" class="text-gray-500 py-4">No hay citas recientes</div>
+              <div *ngIf="summary.recentAppointments.length === 0" class="text-gray-500 py-4">No hay citas recientes</div>
             </div>
           </div>
 
@@ -130,7 +171,7 @@ import { Router } from '@angular/router';
                  </div>
                  <span class="sex-badge">{{ item.sex }}</span>
               </div>
-              <div *ngIf="summary.recentPets?.length === 0" class="text-gray-500 py-4">No hay pacientes recientes</div>
+              <div *ngIf="summary.recentPets.length === 0" class="text-gray-500 py-4">No hay pacientes recientes</div>
             </div>
           </div>
         </div>
@@ -161,6 +202,12 @@ import { Router } from '@angular/router';
     .alert-header h4 { font-weight: 700; color: #111827; margin: 0; font-size: 1.1rem; }
     .alert-header .badge { background: #fee2e2; color: #b91c1c; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; }
     .alert-body { color: #4b5563; font-size: 0.95rem; margin-top: 0.75rem; line-height: 1.4; }
+    .inventory-note { margin-top: 0.75rem; font-size: 0.9rem; color: #374151; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .inventory-pill { padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
+    .inventory-pill.ok { background: #dcfce7; color: #166534; }
+    .inventory-pill.low { background: #fef9c3; color: #92400e; }
+    .inventory-pill.out { background: #fee2e2; color: #b91c1c; }
+    .inventory-pill.missing { background: #e5e7eb; color: #374151; }
     
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
     .kpi-card { background: #fff; border-radius: 1rem; padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem; }
@@ -181,6 +228,19 @@ import { Router } from '@angular/router';
     
     .status-badge { background: #dbeafe; color: #1d4ed8; padding: 0.35rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; }
     .sex-badge { background: #f3f4f6; color: #4b5563; padding: 0.35rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; }
+
+    .inventory-summary { margin-top: 2rem; background: #fff; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08); }
+    .inventory-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    .inventory-header h4 { margin: 0; font-size: 1.25rem; font-weight: 700; color: #1f2937; }
+    .inventory-header span { color: #6b7280; font-size: 0.9rem; }
+    .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .inventory-card { padding: 1rem; border-radius: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; }
+    .inventory-card p { margin: 0 0 0.35rem; color: #6b7280; font-size: 0.85rem; }
+    .inventory-card strong { font-size: 1.6rem; color: #111827; }
+    .inventory-low { margin-top: 1.25rem; }
+    .inventory-low h5 { margin: 0 0 0.6rem; font-size: 1rem; color: #b91c1c; }
+    .inventory-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; color: #374151; font-size: 0.9rem; }
+    .inventory-item:last-child { border-bottom: none; }
     
     @media (max-width: 768px) {
       .header-banner { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
@@ -194,7 +254,7 @@ export class DashboardComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  summary: any | null = null; // Typing as any allowing activeAlerts to easily mount without model changes blocking.
+  summary: DashboardSummary | null = null;
   errorMsg = '';
 
   ngOnInit(): void {
@@ -226,5 +286,19 @@ export class DashboardComponent implements OnInit {
   extractOwner(value: unknown): string {
     const owner = value as { fullName?: string } | undefined;
     return owner?.fullName ?? 'Dueno';
+  }
+
+  stockLabel(status?: string): string {
+    if (status === 'out') return 'Agotado';
+    if (status === 'low') return 'Bajo';
+    if (status === 'missing') return 'Sin registro';
+    return 'Disponible';
+  }
+
+  stockClass(status?: string): string {
+    if (status === 'out') return 'out';
+    if (status === 'low') return 'low';
+    if (status === 'missing') return 'missing';
+    return 'ok';
   }
 }

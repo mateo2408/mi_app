@@ -19,14 +19,18 @@ import { Disease, Diagnosis, Alert } from '../core/diagnosis.models';
       <h2 class="text-2xl font-bold mb-6 text-gray-800">Registrar Diagnostico</h2>
 
       <!-- ALERTA PREVENTIVA: Se muestra solo si existe 'diagnosticAlert.status' en true -->
-      <div *ngIf="diagnosticAlert?.status" 
-           class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 shadow-sm rounded flex items-center justify-between">
-        <div>
-          <strong class="font-bold text-lg">Alerta de Brote Epidemico</strong>
-          <p class="mt-1">{{ diagnosticAlert!.message }}</p>
-        </div>
-        <button (click)="diagnosticAlert = null" class="font-bold text-xl px-2">X</button>
-      </div>
+       <div *ngIf="diagnosticAlert?.status" 
+            class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 shadow-sm rounded flex items-center justify-between">
+         <div>
+           <strong class="font-bold text-lg">Alerta de Brote Epidemico</strong>
+           <p class="mt-1">{{ diagnosticAlert!.message }}</p>
+           <p *ngIf="diagnosticAlert?.inventory" class="mt-2 text-sm text-red-800">
+             Stock disponible: {{ diagnosticAlert?.inventory?.available }} {{ diagnosticAlert?.inventory?.unit }}
+             ({{ inventoryLabel(diagnosticAlert?.inventory?.status || 'missing') }})
+           </p>
+         </div>
+         <button (click)="diagnosticAlert = null" class="font-bold text-xl px-2">X</button>
+       </div>
 
       <!-- MENSAJE DE EXITO Y ERROR -->
       <div *ngIf="successMessage" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6">
@@ -123,5 +127,12 @@ export class DiagnosticsComponent implements OnInit {
         this.apiError = err.error?.message || 'Error interno del servidor. Revisa que los datos sean correctos.';
       }
     });
+  }
+
+  inventoryLabel(status: string): string {
+    if (status === 'out') return 'Agotado';
+    if (status === 'low') return 'Bajo';
+    if (status === 'missing') return 'Sin registro';
+    return 'Disponible';
   }
 }

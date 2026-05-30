@@ -26,7 +26,10 @@ CORE/
 ├── index.js                          # Punto de entrada - Exporta servicios
 ├── repositories/
 │   ├── diagnosis.repository.js       # Acceso a datos de diagnósticos
-│   └── disease.repository.js         # Acceso a datos de enfermedades
+│   ├── disease.repository.js         # Acceso a datos de enfermedades
+│   └── inventory.repository.js       # Acceso a datos de inventario
+├── inventory/
+│   └── inventory.service.js          # Stock, validación y conteo de medicamentos
 └── epidemiology/                     # Lógica epidemiológica
     ├── outbreak.analyzer.js          # Análisis de brotes (6+ casos en 60 días)
     ├── disease.service.js            # Validación y negocio de enfermedades
@@ -63,6 +66,7 @@ BACKEND/
 │   ├── ClinicalRecord.js
 │   ├── Disease.js                    # Catálogo de enfermedades
 │   ├── Diagnosis.js                  # Registro de diagnósticos
+│   ├── MedicationInventory.js        # Inventario de medicamentos
 │   ├── Country.js
 │   ├── Province.js
 │   └── City.js
@@ -79,6 +83,7 @@ BACKEND/
 │   ├── auth.js
 │   ├── diagnostics.js
 │   ├── dashboard.js
+│   ├── inventory.js
 │   ├── appointments.js
 │   ├── owners.js
 │   ├── pets.js
@@ -199,6 +204,7 @@ Sistema de Alertas Epidemiológicas
 
 ### CRUD Estándar
 - `/api/appointments` - Citas
+- `/api/inventory` - Inventario de medicamentos (stock)
 - `/api/owners` - Dueños
 - `/api/pets` - Mascotas
 - `/api/records` - Registros clínicos

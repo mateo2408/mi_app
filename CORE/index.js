@@ -13,14 +13,17 @@
 // Repositories
 const DiagnosisRepository = require('./repositories/diagnosis.repository');
 const DiseaseRepository = require('./repositories/disease.repository');
+const InventoryRepository = require('./repositories/inventory.repository');
 
 // Services
 const OutbreakAnalyzer = require('./epidemiology/outbreak.analyzer');
 const DiseaseService = require('./epidemiology/disease.service');
 const EpidemicComparator = require('./epidemiology/epidemic.comparator');
+const InventoryService = require('./inventory/inventory.service');
 
 // Inyección de dependencias: Instancia los servicios con sus dependencias
-const outbreakAnalyzer = new OutbreakAnalyzer(DiagnosisRepository, DiseaseRepository);
+const inventoryService = new InventoryService(InventoryRepository);
+const outbreakAnalyzer = new OutbreakAnalyzer(DiagnosisRepository, DiseaseRepository, inventoryService);
 const diseaseService = new DiseaseService(DiseaseRepository);
 const epidemicComparator = new EpidemicComparator(outbreakAnalyzer);
 
@@ -28,23 +31,27 @@ module.exports = {
     // Repositories (acceso a datos)
     repositories: {
         DiagnosisRepository,
-        DiseaseRepository
+        DiseaseRepository,
+        InventoryRepository
     },
 
     // Servicios (lógica de negocio)
     services: {
         OutbreakAnalyzer: outbreakAnalyzer,
         DiseaseService: diseaseService,
-        EpidemicComparator: epidemicComparator
+        EpidemicComparator: epidemicComparator,
+        InventoryService: inventoryService
     },
 
     // Alias para acceso directo
     outbreakAnalyzer,
     diseaseService,
     epidemicComparator,
+    inventoryService,
 
     // Clases para instancias personalizadas si es necesario
     OutbreakAnalyzer,
     DiseaseService,
-    EpidemicComparator
+    EpidemicComparator,
+    InventoryService
 };
