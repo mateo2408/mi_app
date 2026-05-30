@@ -9,6 +9,7 @@ import {
   Owner,
   Pet,
 } from './models';
+import { map } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 const apiBaseUrl = environment.apiBaseUrl;
@@ -17,6 +18,22 @@ const apiBaseUrl = environment.apiBaseUrl;
 export class ApiService {
   private readonly http = inject(HttpClient);
 
+  private unwrapArrayResponse<T>(
+    response: T[] | { data?: T[]; items?: T[]; results?: T[]; owners?: T[]; inventory?: T[] },
+    label: string
+  ): T[] {
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    const candidate = response.data ?? response.items ?? response.results ?? response.owners ?? response.inventory;
+    if (Array.isArray(candidate)) {
+      return candidate;
+    }
+
+    throw new Error(`Respuesta invalida para ${label}`);
+  }
+
   // Dashboard
   getSummary() {
     return this.http.get<DashboardSummary>(`${apiBaseUrl}/dashboard/summary`);
@@ -24,7 +41,11 @@ export class ApiService {
 
   // Inventario
   listInventory() {
-    return this.http.get<InventoryItem[]>(`${apiBaseUrl}/inventory`);
+    return this.http
+      .get<InventoryItem[] | { data?: InventoryItem[]; items?: InventoryItem[]; results?: InventoryItem[] }>(
+        `${apiBaseUrl}/inventory`
+      )
+      .pipe(map((response) => this.unwrapArrayResponse(response, 'inventario')));
   }
 
   createInventoryItem(payload: Partial<InventoryItem>) {
@@ -37,7 +58,9 @@ export class ApiService {
 
   // Dueños
   listOwners() {
-    return this.http.get<Owner[]>(`${apiBaseUrl}/owners`);
+    return this.http
+      .get<Owner[] | { data?: Owner[]; items?: Owner[]; results?: Owner[] }>(`${apiBaseUrl}/owners`)
+      .pipe(map((response) => this.unwrapArrayResponse(response, 'dueños')));
   }
 
   createOwner(payload: Partial<Owner>) {
