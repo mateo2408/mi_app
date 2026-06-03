@@ -49,6 +49,34 @@ const createDiagnostic = async (req, res) => {
 };
 
 /**
+ * Registra una nueva enfermedad en el catalogo.
+ */
+const createDisease = async (req, res) => {
+    try {
+        const validation = diseaseService.validateDiseaseData(req.body);
+
+        if (!validation.valid) {
+            return res.status(400).json({
+                message: 'Datos de enfermedad invalidos',
+                errors: validation.errors
+            });
+        }
+
+        const existingDisease = await repositories.DiseaseRepository.findByName(validation.data.name);
+
+        if (existingDisease) {
+            return res.status(409).json({ message: 'La enfermedad ya existe en el catalogo' });
+        }
+
+        const disease = await repositories.DiseaseRepository.create(validation.data);
+        return res.status(201).json(disease);
+    } catch (err) {
+        console.error('[Diagnostics Controller] Error en createDisease:', err);
+        return res.status(500).json({ message: 'Error creando la enfermedad.' });
+    }
+};
+
+/**
  * Obtiene todas las enfermedades catalogadas.
  */
 const getDiseases = async (_req, res) => {
@@ -130,6 +158,7 @@ const getEpidemicReport = async (_req, res) => {
 
 module.exports = {
     createDiagnostic,
+    createDisease,
     getDiseases,
     getCriticalDiseases,
     analyzeOutbreak,

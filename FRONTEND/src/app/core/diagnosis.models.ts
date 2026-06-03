@@ -4,6 +4,43 @@ export interface Disease {
     medication: string;
     outbreakThreshold: number;
 }
+
+export interface NewDisease {
+    name: string;
+    medication: string;
+    outbreakThreshold: number;
+}
+
+export interface OutbreakDiseaseInfo {
+    id: string;
+    name: string;
+    medication: string;
+}
+
+export interface OutbreakAnalysis {
+    isOutbreak: boolean;
+    caseCount: number;
+    threshold: number;
+    windowDays: number;
+    diseaseInfo: OutbreakDiseaseInfo | null;
+    recentDiagnoses?: Array<{
+        _id?: string;
+        petName: string;
+        diseaseId: string;
+        date?: string;
+    }>;
+    medicationAvailability?: InventoryAvailability | null;
+    alert: Alert | null;
+    error?: string;
+}
+
+export interface OutbreakSummary {
+    totalDiseases: number;
+    analysisResults: OutbreakAnalysis[];
+    activeOutbreaks: OutbreakAnalysis[];
+    hasActiveOutbreaks: boolean;
+}
+
 export interface Diagnosis {
     petName: string;
     diseaseId: string;

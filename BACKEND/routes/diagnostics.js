@@ -2,6 +2,7 @@ const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const {
     createDiagnostic,
+    createDisease,
     getDiseases,
     getCriticalDiseases,
     analyzeOutbreak,
@@ -14,6 +15,7 @@ const router = express.Router();
 // CRUD Básico
 router.post('/', requireAuth, createDiagnostic);
 router.get('/catalog', requireAuth, getDiseases);
+router.post('/catalog', requireAuth, createDisease);
 
 // Análisis Epidemiológico (CORE)
 router.get('/critical-diseases', requireAuth, getCriticalDiseases);

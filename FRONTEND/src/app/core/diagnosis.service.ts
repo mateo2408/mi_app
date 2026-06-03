@@ -6,9 +6,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Disease, Diagnosis, DiagnosisResponse } from './diagnosis.models';
+import { Disease, Diagnosis, DiagnosisResponse, NewDisease, OutbreakSummary } from './diagnosis.models';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
+import { Pet } from './models';
 
 /**
  * El decorador @Injectable permite que esta clase sea inyectada
@@ -41,6 +42,27 @@ export class DiagnosisService {
    */
   getDiseases(): Observable<Disease[]> {
     return this.http.get<Disease[]>(this.apiUrl + '/catalog', { headers: this.getAuthHeaders() });
+  }
+
+  /**
+   * Obtiene el listado de mascotas disponibles para seleccionar en el diagnostico.
+   */
+  getPets(): Observable<Pet[]> {
+    return this.http.get<Pet[]>(`${environment.apiBaseUrl}/pets`, { headers: this.getAuthHeaders() });
+  }
+
+  /**
+   * Registra una nueva enfermedad en el catalogo.
+   */
+  createDisease(data: NewDisease): Observable<Disease> {
+    return this.http.post<Disease>(this.apiUrl + '/catalog', data, { headers: this.getAuthHeaders() });
+  }
+
+  /**
+   * Obtiene el resumen epidemiologico para dibujar el grafico en vivo.
+   */
+  getOutbreakSummary(): Observable<OutbreakSummary> {
+    return this.http.get<OutbreakSummary>(this.apiUrl + '/analyze/all', { headers: this.getAuthHeaders() });
   }
 
   /**
