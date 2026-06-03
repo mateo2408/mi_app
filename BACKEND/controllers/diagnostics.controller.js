@@ -68,6 +68,18 @@ const createDisease = async (req, res) => {
             return res.status(409).json({ message: 'La enfermedad ya existe en el catalogo' });
         }
 
+        const availableMedicationNames = new Set(
+            (await inventoryService.listInventory()).map((item) => item.medication)
+        );
+        const missingMedications = validation.data.medications.filter((medication) => !availableMedicationNames.has(medication));
+
+        if (missingMedications.length > 0) {
+            return res.status(400).json({
+                message: 'Todos los medicamentos asociados deben existir en el inventario',
+                missingMedications
+            });
+        }
+
         const disease = await repositories.DiseaseRepository.create(validation.data);
         return res.status(201).json(disease);
     } catch (err) {
@@ -90,12 +102,16 @@ const getTreatmentCases = async (req, res) => {
 
         const cases = await repositories.DiagnosisRepository.findByDiseaseSorted(diseaseId);
         const analysis = await outbreakAnalyzer.analyzeDisease(diseaseId);
+            const medications = Array.isArray(disease.medications) && disease.medications.length > 0
+                ? disease.medications
+                : (disease.medication ? [disease.medication] : []);
 
         return res.json({
             disease: {
                 _id: disease._id,
                 name: disease.name,
                 medication: disease.medication,
+                    medications,
                 outbreakThreshold: disease.outbreakThreshold
             },
             cases: cases.map((item) => ({
@@ -116,7 +132,7 @@ const getTreatmentCases = async (req, res) => {
  * Aplica un tratamiento a una mascota y descuenta inventario.
  */
 const applyTreatment = async (req, res) => {
-    const { diseaseId, petName } = req.body;
+    const { diseaseId, petName, medication } = req.body;
 
     if (!diseaseId || !petName) {
         return res.status(400).json({ message: 'diseaseId y petName son requeridos' });
@@ -131,6 +147,21 @@ const applyTreatment = async (req, res) => {
             return res.status(404).json({ message: 'Enfermedad no encontrada' });
         }
 
+        const availableMedications = Array.isArray(disease.medications) && disease.medications.length > 0
+            ? disease.medications
+            : (disease.medication ? [disease.medication] : []);
+        const selectedMedication = typeof medication === 'string' && medication.trim() !== ''
+            ? medication.trim()
+            : availableMedications[0] || '';
+
+        if (!selectedMedication) {
+            return res.status(400).json({ message: 'La enfermedad no tiene medicamentos asociados' });
+        }
+
+        if (!availableMedications.includes(selectedMedication)) {
+            return res.status(400).json({ message: 'El medicamento seleccionado no pertenece a esta enfermedad' });
+        }
+
         const diagnosis = await repositories.DiagnosisRepository.deleteByDiseaseAndPetName(diseaseId, petName);
         if (!diagnosis) {
             return res.status(404).json({ message: 'No se encontro un caso de esa mascota para esa enfermedad' });
@@ -138,7 +169,7 @@ const applyTreatment = async (req, res) => {
 
         removedDiagnosis = true;
 
-        const inventoryResult = await inventoryService.consumeMedication(disease.medication, 1);
+        const inventoryResult = await inventoryService.consumeMedication(selectedMedication, 1);
         if (!inventoryResult.ok) {
             await repositories.DiagnosisRepository.create({ petName, diseaseId });
             return res.status(inventoryResult.status || 400).json({ message: inventoryResult.message });
@@ -152,14 +183,15 @@ const applyTreatment = async (req, res) => {
             message: 'Tratamiento administrado correctamente',
             treatedCase: {
                 petName,
-                diseaseId
+                diseaseId,
+                medication: selectedMedication
             },
             inventory: inventoryResult.item,
             outbreakAnalysis
         });
     } catch (err) {
         if (consumedMedication) {
-            await inventoryService.restoreMedication((await repositories.DiseaseRepository.findById(diseaseId))?.medication || '', 1);
+            await inventoryService.restoreMedication((req.body.medication || (await repositories.DiseaseRepository.findById(diseaseId))?.medication) || '', 1);
         }
         if (removedDiagnosis) {
             await repositories.DiagnosisRepository.create({ petName, diseaseId });

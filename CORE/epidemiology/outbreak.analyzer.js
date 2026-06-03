@@ -50,6 +50,7 @@ class OutbreakAnalyzer {
 
             // 2. Usar el umbral propio de la enfermedad cuando exista.
             const effectiveThreshold = disease.outbreakThreshold || threshold;
+            const diseaseMedications = this._getDiseaseMedications(disease);
 
             // 3. Recuperar los casos recientes que entran en la ventana de analisis.
             const recentDiagnoses = await this.diagnosisRepository.findRecentByDisease(
@@ -59,10 +60,11 @@ class OutbreakAnalyzer {
 
             const caseCount = recentDiagnoses.length;
 
-            // 4. Leer el inventario asociado al tratamiento para mostrar alertas utiles.
-            const medicationAvailability = this.inventoryService
-                ? await this.inventoryService.getMedicationAvailability(disease.medication)
-                : null;
+            // 4. Leer el inventario asociado a todos los tratamientos posibles.
+            const medicationAvailabilities = this.inventoryService
+                ? await Promise.all(diseaseMedications.map((medication) => this.inventoryService.getMedicationAvailability(medication)))
+                : [];
+            const medicationAvailability = medicationAvailabilities[0] || null;
 
             // 5. Comparar casos contra umbral para decidir si ya existe brote.
             const isOutbreak = caseCount >= effectiveThreshold;
@@ -76,16 +78,18 @@ class OutbreakAnalyzer {
                 diseaseInfo: {
                     id: disease._id,
                     name: disease.name,
-                    medication: disease.medication
+                    medication: disease.medication,
+                    medications: diseaseMedications
                 },
                 recentDiagnoses: recentDiagnoses.slice(0, 10), // Últimos 10 casos
                 medicationAvailability,
+                medicationAvailabilities,
                 alert: null
             };
 
             // 7. Si hay brote, generar una alerta estructurada con recomendacion.
             if (isOutbreak) {
-                result.alert = this._generateAlert(disease, caseCount, effectiveThreshold, medicationAvailability);
+                result.alert = this._generateAlert(disease, caseCount, effectiveThreshold, medicationAvailabilities);
             }
 
             return result;
@@ -165,23 +169,26 @@ class OutbreakAnalyzer {
     _generateAlert(disease, caseCount, threshold, medicationAvailability) {
         // Traduce el estado de casos y stock a un mensaje accionable para el usuario.
         const inventoryInfo = medicationAvailability
-            ? {
-                medication: medicationAvailability.medication,
-                available: medicationAvailability.available,
-                minStock: medicationAvailability.minStock,
-                unit: medicationAvailability.unit,
-                status: medicationAvailability.status,
-                needsRestock: medicationAvailability.needsRestock
-            }
-            : null;
+            ? medicationAvailability.map((item) => ({
+                medication: item.medication,
+                available: item.available,
+                minStock: item.minStock,
+                unit: item.unit,
+                status: item.status,
+                needsRestock: item.needsRestock
+            }))
+            : [];
 
-        const inventoryNote = inventoryInfo
-            ? `Stock actual: ${inventoryInfo.available} ${inventoryInfo.unit} (${this._formatStockStatus(inventoryInfo.status)})`
+        const inventoryNote = inventoryInfo.length > 0
+            ? inventoryInfo
+                .map((item) => `${item.medication}: ${item.available} ${item.unit} (${this._formatStockStatus(item.status)})`)
+                .join(' | ')
             : 'Stock no registrado en inventario';
 
-        const recommendation = inventoryInfo && inventoryInfo.needsRestock
-            ? `Reabastecer ${disease.medication}. ${inventoryNote}`
-            : `Comprar Lote de ${disease.medication}. Casos: ${caseCount}/${threshold}. ${inventoryNote}`;
+        const medicationList = inventoryInfo.map((item) => item.medication);
+        const recommendation = medicationList.length > 0
+            ? `Opciones de tratamiento: ${medicationList.join(', ')}. Casos: ${caseCount}/${threshold}. ${inventoryNote}`
+            : `No hay medicamentos asociados. Casos: ${caseCount}/${threshold}. ${inventoryNote}`;
 
         return {
             type: 'OUTBREAK_ALERT',
@@ -191,9 +198,10 @@ class OutbreakAnalyzer {
             activeCases: caseCount,
             diseaseName: disease.name,
             medication: disease.medication,
+            medications: inventoryInfo,
             threshold,
             recommendation,
-            inventory: inventoryInfo,
+            inventory: inventoryInfo[0] || null,
             timestamp: new Date().toISOString()
         };
     }
@@ -220,6 +228,14 @@ class OutbreakAnalyzer {
         if (status === 'low') return 'bajo';
         if (status === 'missing') return 'sin registro';
         return 'suficiente';
+    }
+
+    _getDiseaseMedications(disease) {
+        const medications = Array.isArray(disease.medications) && disease.medications.length > 0
+            ? disease.medications
+            : (disease.medication ? [disease.medication] : []);
+
+        return [...new Set(medications.map((item) => String(item || '').trim()).filter(Boolean))];
     }
 }
 

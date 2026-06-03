@@ -55,6 +55,14 @@ import { Router } from '@angular/router';
                 <div class="alert-footer text-red-600 font-semibold mt-2">
                   Recomendacion: {{ alert.recommendation }}
                 </div>
+                <div class="medication-list" *ngIf="alert.medications && alert.medications.length > 0">
+                  <div *ngFor="let medication of alert.medications" class="inventory-note">
+                    Medicamento: {{ medication.medication }}
+                    <span class="inventory-pill" [class]="stockClass(medication.status)">
+                      {{ stockLabel(medication.status) }} · {{ medication.available }} {{ medication.unit }}
+                    </span>
+                  </div>
+                </div>
                 <div class="inventory-note" *ngIf="alert.inventory; else missingInventory">
                   Stock disponible: {{ alert.inventory.available }} {{ alert.inventory.unit }}
                   <span class="inventory-pill" [class]="stockClass(alert.inventory.status)">
@@ -203,6 +211,7 @@ import { Router } from '@angular/router';
     .alert-header .badge { background: #fee2e2; color: #b91c1c; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; }
     .alert-body { color: #4b5563; font-size: 0.95rem; margin-top: 0.75rem; line-height: 1.4; }
     .inventory-note { margin-top: 0.75rem; font-size: 0.9rem; color: #374151; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .medication-list { margin-top: 0.5rem; display: grid; gap: 0.35rem; }
     .inventory-pill { padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
     .inventory-pill.ok { background: #dcfce7; color: #166534; }
     .inventory-pill.low { background: #fef9c3; color: #92400e; }

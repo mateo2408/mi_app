@@ -86,15 +86,15 @@ class EpidemicComparator {
             .filter((result) => result.isOutbreak && result.alert)
             .map((result) => result.alert);
         const outbreakMedicationStatus = analysis.analysisResults
-            .filter((result) => result.isOutbreak && result.medicationAvailability)
-            .map((result) => ({
+            .filter((result) => result.isOutbreak && Array.isArray(result.medicationAvailabilities))
+            .flatMap((result) => result.medicationAvailabilities.map((item) => ({
                 disease: result.diseaseInfo.name,
-                medication: result.medicationAvailability.medication,
-                available: result.medicationAvailability.available,
-                minStock: result.medicationAvailability.minStock,
-                unit: result.medicationAvailability.unit,
-                status: result.medicationAvailability.status
-            }));
+                medication: item.medication,
+                available: item.available,
+                minStock: item.minStock,
+                unit: item.unit,
+                status: item.status
+            })));
 
         return {
             summary: {

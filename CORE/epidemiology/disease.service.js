@@ -54,12 +54,23 @@ class DiseaseService {
     validateDiseaseData(data) {
         const errors = [];
 
+        const normalizeMedicationList = (value) => {
+            const list = Array.isArray(value) ? value : [];
+            return [...new Set(list.map((item) => String(item || '').trim()).filter(Boolean))];
+        };
+
         if (!data.name || typeof data.name !== 'string' || data.name.trim() === '') {
             errors.push('El nombre de la enfermedad es requerido');
         }
 
-        if (!data.medication || typeof data.medication !== 'string' || data.medication.trim() === '') {
-            errors.push('El medicamento es requerido');
+        const medicationsFromArray = normalizeMedicationList(data.medications);
+        const medicationsFromSingleValue = typeof data.medication === 'string'
+            ? normalizeMedicationList([data.medication])
+            : [];
+        const medications = medicationsFromArray.length > 0 ? medicationsFromArray : medicationsFromSingleValue;
+
+        if (medications.length === 0) {
+            errors.push('Debe seleccionar al menos un medicamento');
         }
 
         if (data.outbreakThreshold !== undefined) {
@@ -76,7 +87,8 @@ class DiseaseService {
             valid: true,
             data: {
                 name: data.name.trim(),
-                medication: data.medication.trim(),
+                medication: medications[0],
+                medications,
                 outbreakThreshold: data.outbreakThreshold || 6
             }
         };
@@ -88,10 +100,14 @@ class DiseaseService {
      */
     _enrichDiseaseData(disease) {
         const threshold = disease.outbreakThreshold || 6;
+        const medications = Array.isArray(disease.medications) && disease.medications.length > 0
+            ? disease.medications
+            : (disease.medication ? [disease.medication] : []);
         return {
             ...disease,
+            medications,
             riskLevel: this._calculateRiskLevel(threshold),
-            description: `${disease.name} - Tratamiento: ${disease.medication}`,
+            description: `${disease.name} - Tratamientos: ${medications.join(', ') || disease.medication}`,
             createdAtFormatted: disease.createdAt ? new Date(disease.createdAt).toLocaleDateString() : null
         };
     }

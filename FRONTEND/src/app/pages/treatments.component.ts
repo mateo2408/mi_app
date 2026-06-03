@@ -80,7 +80,20 @@ interface OutbreakOption {
           <div *ngIf="selectedAnalysis" class="analysis-card">
             <strong>{{ selectedAnalysis.diseaseInfo?.name }}</strong>
             <p>{{ selectedAnalysis.caseCount }} casos registrados</p>
-            <small>Umbral: {{ selectedAnalysis.threshold }} · Medicamento: {{ selectedAnalysis.diseaseInfo?.medication }}</small>
+            <small>
+              Umbral: {{ selectedAnalysis.threshold }} · Medicamentos:
+              {{ (selectedAnalysis.diseaseInfo?.medications || [selectedAnalysis.diseaseInfo?.medication]).join(', ') }}
+            </small>
+          </div>
+
+          <div *ngIf="availableMedications.length > 0" class="analysis-card">
+            <strong>Medicamento a administrar</strong>
+            <select [(ngModel)]="selectedMedication" class="field-input medication-select">
+              <option *ngFor="let medication of availableMedications" [value]="medication">
+                {{ medication }}
+              </option>
+            </select>
+            <small>Selecciona cuál aplicar en el caso elegido.</small>
           </div>
         </div>
       </section>
@@ -330,6 +343,8 @@ export class TreatmentsComponent implements OnInit {
 
   outbreakOptions: OutbreakOption[] = [];
   selectedDiseaseId = '';
+  availableMedications: string[] = [];
+  selectedMedication = '';
   treatmentCases: TreatmentCase[] = [];
   selectedAnalysis: OutbreakAnalysis | null = null;
   loadingCases = false;
@@ -362,6 +377,8 @@ export class TreatmentsComponent implements OnInit {
         } else {
           this.treatmentCases = [];
           this.selectedAnalysis = null;
+          this.availableMedications = [];
+          this.selectedMedication = '';
         }
       },
       error: (error) => {
@@ -390,6 +407,8 @@ export class TreatmentsComponent implements OnInit {
     if (!diseaseId) {
       this.treatmentCases = [];
       this.selectedAnalysis = null;
+      this.availableMedications = [];
+      this.selectedMedication = '';
       return;
     }
 
@@ -401,6 +420,12 @@ export class TreatmentsComponent implements OnInit {
         this.treatmentCases = response.cases;
         this.selectedAnalysis = response.analysis;
         this.selectedDiseaseId = response.disease._id;
+        this.availableMedications = response.disease.medications?.length
+          ? response.disease.medications
+          : (response.disease.medication ? [response.disease.medication] : []);
+        if (!this.selectedMedication || !this.availableMedications.includes(this.selectedMedication)) {
+          this.selectedMedication = this.availableMedications[0] || '';
+        }
         this.loadingCases = false;
       },
       error: (error) => {
@@ -408,6 +433,8 @@ export class TreatmentsComponent implements OnInit {
         this.errorMessage = error?.error?.message || 'No se pudieron cargar los casos del brote.';
         this.treatmentCases = [];
         this.selectedAnalysis = null;
+        this.availableMedications = [];
+        this.selectedMedication = '';
         this.loadingCases = false;
       }
     });
@@ -419,13 +446,22 @@ export class TreatmentsComponent implements OnInit {
       return;
     }
 
+    if (!this.selectedMedication) {
+      this.errorMessage = 'Selecciona un medicamento antes de administrar tratamiento.';
+      return;
+    }
+
     this.successMessage = '';
     this.errorMessage = '';
     this.applyingTreatment = true;
 
-    this.diagnosisService.applyTreatment({ diseaseId: this.selectedDiseaseId, petName: caseItem.petName }).subscribe({
+    this.diagnosisService.applyTreatment({
+      diseaseId: this.selectedDiseaseId,
+      petName: caseItem.petName,
+      medication: this.selectedMedication
+    }).subscribe({
       next: (response: ApplyTreatmentResponse) => {
-        this.successMessage = `${response.message}. Se actualizo el stock y el conteo de casos.`;
+        this.successMessage = `${response.message}. Se actualizo el stock y el conteo de casos con ${response.treatedCase.medication || this.selectedMedication}.`;
         this.selectedAnalysis = response.outbreakAnalysis;
         this.reloadOutbreaks();
         setTimeout(() => (this.successMessage = ''), 3500);

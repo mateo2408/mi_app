@@ -2,12 +2,14 @@ export interface Disease {
     _id: string;
     name: string;
     medication: string;
+    medications?: string[];
     outbreakThreshold: number;
 }
 
 export interface NewDisease {
     name: string;
-    medication: string;
+    medication?: string;
+    medications: string[];
     outbreakThreshold: number;
 }
 
@@ -15,6 +17,7 @@ export interface OutbreakDiseaseInfo {
     id: string;
     name: string;
     medication: string;
+    medications?: string[];
 }
 
 export interface OutbreakAnalysis {
@@ -30,6 +33,7 @@ export interface OutbreakAnalysis {
         date?: string;
     }>;
     medicationAvailability?: InventoryAvailability | null;
+    medicationAvailabilities?: InventoryAvailability[];
     alert: Alert | null;
     error?: string;
 }
@@ -57,6 +61,7 @@ export interface TreatmentCasesResponse {
 export interface ApplyTreatmentRequest {
     diseaseId: string;
     petName: string;
+    medication: string;
 }
 
 export interface ApplyTreatmentResponse {
@@ -64,6 +69,7 @@ export interface ApplyTreatmentResponse {
     treatedCase: {
         petName: string;
         diseaseId: string;
+        medication?: string;
     };
     inventory: InventoryAvailability | null;
     outbreakAnalysis: OutbreakAnalysis;
@@ -91,6 +97,7 @@ export interface Alert {
     threshold?: number;
     recommendation?: string;
     inventory?: InventoryAvailability | null;
+    medications?: InventoryAvailability[]; // Added to support multiple correlated treatments
 }
 export interface DiagnosisResponse {
     diagnosis: Diagnosis;

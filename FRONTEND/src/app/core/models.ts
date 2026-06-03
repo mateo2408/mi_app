@@ -117,6 +117,7 @@ export interface OutbreakAlert {
   medication: string;
   recommendation: string;
   inventory?: OutbreakAlertInventory | null;
+  medications?: OutbreakAlertInventory[];
   timestamp: string;
 }
 

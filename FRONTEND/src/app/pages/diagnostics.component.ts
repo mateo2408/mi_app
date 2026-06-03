@@ -140,7 +140,7 @@ interface ChartItem {
         <article class="panel disease-panel">
           <div class="panel-header">
             <h3>Nueva enfermedad</h3>
-            <p>Agrega el catalogo y el grafico la considerara de inmediato.</p>
+            <p>Agrega el catalogo y selecciona uno o mas medicamentos del inventario para crear la correlacion.</p>
           </div>
 
           <form (ngSubmit)="onCreateDisease()" #diseaseForm="ngForm" class="space-y-4">
@@ -157,13 +157,19 @@ interface ChartItem {
             </div>
 
             <div>
-              <label class="field-label">Medicamento</label>
-              <select [(ngModel)]="newDisease.medication" name="medication" required class="field-input bg-white">
-                <option value="" disabled>Seleccione un medicamento del inventario</option>
+              <label class="field-label">Medicamentos del inventario</label>
+              <select
+                [(ngModel)]="selectedDiseaseMedications"
+                name="medications"
+                multiple
+                required
+                class="field-input bg-white medication-select"
+              >
                 <option *ngFor="let item of inventoryItems" [value]="item.medication">
                   {{ item.medication }} - {{ item.stock }} {{ item.unit }}
                 </option>
               </select>
+              <small class="field-hint">Mantén pulsado Ctrl o Cmd para seleccionar varios medicamentos.</small>
             </div>
 
             <div>
@@ -318,6 +324,10 @@ interface ChartItem {
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
       }
 
+      .medication-select {
+        min-height: 150px;
+      }
+
       .field-input:focus {
         border-color: #0ea5e9;
         box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.14);
@@ -439,7 +449,8 @@ export class DiagnosticsComponent implements OnInit {
   chartItems: ChartItem[] = [];
   diagnosis: Diagnosis = { petName: '', diseaseId: '' };
   selectedPetId = '';
-  newDisease: NewDisease = { name: '', medication: '', outbreakThreshold: 6 };
+  selectedDiseaseMedications: string[] = [];
+  newDisease: NewDisease = { name: '', medications: [], outbreakThreshold: 6 };
   diagnosticAlert: Alert | null = null;
   successMessage = '';
   apiError = '';
@@ -473,8 +484,8 @@ export class DiagnosticsComponent implements OnInit {
     this.svc.getInventory().subscribe({
       next: (data) => {
         this.inventoryItems = data;
-        if (!this.newDisease.medication && this.inventoryItems.length > 0) {
-          this.newDisease.medication = this.inventoryItems[0].medication;
+        if (this.selectedDiseaseMedications.length === 0 && this.inventoryItems.length > 0) {
+          this.selectedDiseaseMedications = [this.inventoryItems[0].medication];
         }
       },
       error: (err) => console.error('Fallo la carga del inventario:', err)
@@ -553,19 +564,20 @@ export class DiagnosticsComponent implements OnInit {
 
     const payload: NewDisease = {
       name: this.newDisease.name.trim(),
-      medication: this.newDisease.medication.trim(),
+      medications: [...this.selectedDiseaseMedications],
       outbreakThreshold: Number(this.newDisease.outbreakThreshold) || 6
     };
 
-    if (!payload.name || !payload.medication) {
-      this.apiError = 'El nombre y el medicamento de la enfermedad son obligatorios.';
+    if (!payload.name || payload.medications.length === 0) {
+      this.apiError = 'El nombre de la enfermedad y al menos un medicamento son obligatorios.';
       return;
     }
 
     this.svc.createDisease(payload).subscribe({
       next: () => {
         this.successMessage = 'La enfermedad fue agregada al catalogo.';
-        this.newDisease = { name: '', medication: '', outbreakThreshold: 6 };
+        this.newDisease = { name: '', medications: [], outbreakThreshold: 6 };
+        this.selectedDiseaseMedications = this.inventoryItems.length > 0 ? [this.inventoryItems[0].medication] : [];
         this.reloadAllData();
         setTimeout(() => (this.successMessage = ''), 3000);
       },

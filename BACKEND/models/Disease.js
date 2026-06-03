@@ -9,8 +9,11 @@ const scheme = new mongoose.Schema({
     // Nombre exacto del diagnóstico o enfermedad (ej. "Parvovirus")
     name: { type: String, required: true },
     
-    // Tratamiento sugerido que el "Core Inteligente" usará para el reabastecimiento
+    // Tratamiento principal sugerido que el "Core Inteligente" usará como referencia
     medication: { type: String, required: true },
+
+    // Correlacion de medicamentos permitidos para esta enfermedad
+    medications: { type: [String], default: [] },
     
     // Limite de casos soportados (Establecido a 6 por defecto en el requerimiento didáctico)
     outbreakThreshold: { type: Number, required: true, default: 6 }
