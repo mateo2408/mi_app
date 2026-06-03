@@ -7,7 +7,7 @@
  * Este controlador es PURO CRUD + orquestación, sin lógica de negocio.
  */
 
-const { repositories, outbreakAnalyzer, diseaseService, epidemicComparator } = require('../../CORE');
+const { repositories, outbreakAnalyzer, diseaseService, epidemicComparator, inventoryService } = require('../../CORE');
 
 /**
  * Registra un nuevo diagnóstico y analiza si hay brote epidemiológico.
@@ -73,6 +73,99 @@ const createDisease = async (req, res) => {
     } catch (err) {
         console.error('[Diagnostics Controller] Error en createDisease:', err);
         return res.status(500).json({ message: 'Error creando la enfermedad.' });
+    }
+};
+
+/**
+ * Obtiene la lista de mascotas/casos asociados a un brote.
+ */
+const getTreatmentCases = async (req, res) => {
+    try {
+        const { diseaseId } = req.params;
+        const disease = await repositories.DiseaseRepository.findById(diseaseId);
+
+        if (!disease) {
+            return res.status(404).json({ message: 'Enfermedad no encontrada' });
+        }
+
+        const cases = await repositories.DiagnosisRepository.findByDiseaseSorted(diseaseId);
+        const analysis = await outbreakAnalyzer.analyzeDisease(diseaseId);
+
+        return res.json({
+            disease: {
+                _id: disease._id,
+                name: disease.name,
+                medication: disease.medication,
+                outbreakThreshold: disease.outbreakThreshold
+            },
+            cases: cases.map((item) => ({
+                _id: item._id,
+                petName: item.petName,
+                diseaseId: item.diseaseId,
+                date: item.date
+            })),
+            analysis
+        });
+    } catch (err) {
+        console.error('[Diagnostics Controller] Error en getTreatmentCases:', err);
+        return res.status(500).json({ message: 'Error obteniendo los casos del brote.' });
+    }
+};
+
+/**
+ * Aplica un tratamiento a una mascota y descuenta inventario.
+ */
+const applyTreatment = async (req, res) => {
+    const { diseaseId, petName } = req.body;
+
+    if (!diseaseId || !petName) {
+        return res.status(400).json({ message: 'diseaseId y petName son requeridos' });
+    }
+
+    let consumedMedication = false;
+    let removedDiagnosis = false;
+
+    try {
+        const disease = await repositories.DiseaseRepository.findById(diseaseId);
+        if (!disease) {
+            return res.status(404).json({ message: 'Enfermedad no encontrada' });
+        }
+
+        const diagnosis = await repositories.DiagnosisRepository.deleteByDiseaseAndPetName(diseaseId, petName);
+        if (!diagnosis) {
+            return res.status(404).json({ message: 'No se encontro un caso de esa mascota para esa enfermedad' });
+        }
+
+        removedDiagnosis = true;
+
+        const inventoryResult = await inventoryService.consumeMedication(disease.medication, 1);
+        if (!inventoryResult.ok) {
+            await repositories.DiagnosisRepository.create({ petName, diseaseId });
+            return res.status(inventoryResult.status || 400).json({ message: inventoryResult.message });
+        }
+
+        consumedMedication = true;
+
+        const outbreakAnalysis = await outbreakAnalyzer.analyzeDisease(diseaseId);
+
+        return res.json({
+            message: 'Tratamiento administrado correctamente',
+            treatedCase: {
+                petName,
+                diseaseId
+            },
+            inventory: inventoryResult.item,
+            outbreakAnalysis
+        });
+    } catch (err) {
+        if (consumedMedication) {
+            await inventoryService.restoreMedication((await repositories.DiseaseRepository.findById(diseaseId))?.medication || '', 1);
+        }
+        if (removedDiagnosis) {
+            await repositories.DiagnosisRepository.create({ petName, diseaseId });
+        }
+        console.error('[Diagnostics Controller] Error en applyTreatment:', err);
+        return res.status(500).json({ message: 'Error aplicando el tratamiento.' });
     }
 };
 
@@ -159,6 +252,8 @@ const getEpidemicReport = async (_req, res) => {
 module.exports = {
     createDiagnostic,
     createDisease,
+    getTreatmentCases,
+    applyTreatment,
     getDiseases,
     getCriticalDiseases,
     analyzeOutbreak,

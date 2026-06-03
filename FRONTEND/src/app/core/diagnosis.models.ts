@@ -41,6 +41,34 @@ export interface OutbreakSummary {
     hasActiveOutbreaks: boolean;
 }
 
+export interface TreatmentCase {
+    _id: string;
+    petName: string;
+    diseaseId: string;
+    date: string;
+}
+
+export interface TreatmentCasesResponse {
+    disease: Disease;
+    cases: TreatmentCase[];
+    analysis: OutbreakAnalysis;
+}
+
+export interface ApplyTreatmentRequest {
+    diseaseId: string;
+    petName: string;
+}
+
+export interface ApplyTreatmentResponse {
+    message: string;
+    treatedCase: {
+        petName: string;
+        diseaseId: string;
+    };
+    inventory: InventoryAvailability | null;
+    outbreakAnalysis: OutbreakAnalysis;
+}
+
 export interface Diagnosis {
     petName: string;
     diseaseId: string;

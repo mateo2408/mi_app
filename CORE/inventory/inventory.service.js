@@ -199,6 +199,47 @@ class InventoryService {
 
         return { ok: true, item: this._enrichItem(updated) };
     }
+
+    async consumeMedication(medicationName, quantity = 1) {
+        const normalized = this._normalizeMedicationName(medicationName);
+        const safeQuantity = Number(quantity) || 0;
+
+        if (!normalized) {
+            return { ok: false, status: 400, message: 'El medicamento es requerido' };
+        }
+
+        if (!Number.isInteger(safeQuantity) || safeQuantity < 1) {
+            return { ok: false, status: 400, message: 'La cantidad debe ser un entero mayor a 0' };
+        }
+
+        const updated = await this.inventoryRepository.adjustByMedicationKey(normalized, -safeQuantity);
+        if (!updated) {
+            const current = await this.inventoryRepository.findByMedicationKey(normalized);
+            if (!current) {
+                return { ok: false, status: 404, message: 'El medicamento no existe en inventario' };
+            }
+
+            return { ok: false, status: 409, message: 'No hay stock suficiente para administrar el tratamiento' };
+        }
+
+        return { ok: true, item: this._enrichItem(updated) };
+    }
+
+    async restoreMedication(medicationName, quantity = 1) {
+        const normalized = this._normalizeMedicationName(medicationName);
+        const safeQuantity = Number(quantity) || 0;
+
+        if (!normalized || !Number.isInteger(safeQuantity) || safeQuantity < 1) {
+            return { ok: false, status: 400, message: 'Datos invalidos para restaurar inventario' };
+        }
+
+        const updated = await this.inventoryRepository.adjustByMedicationKey(normalized, safeQuantity);
+        if (!updated) {
+            return { ok: false, status: 404, message: 'No se pudo restaurar el inventario' };
+        }
+
+        return { ok: true, item: this._enrichItem(updated) };
+    }
 }
 
 module.exports = InventoryService;

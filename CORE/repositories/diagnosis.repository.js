@@ -40,6 +40,20 @@ class DiagnosisRepository {
     }
 
     /**
+     * Busca diagnósticos por enfermedad ordenados por fecha descendente.
+     */
+    async findByDiseaseSorted(diseaseId) {
+        return await Diagnosis.find({ diseaseId: diseaseId }).sort({ date: -1 }).lean();
+    }
+
+    /**
+     * Elimina un diagnostico especifico asociado a una mascota y una enfermedad.
+     */
+    async deleteByDiseaseAndPetName(diseaseId, petName) {
+        return await Diagnosis.findOneAndDelete({ diseaseId: diseaseId, petName: petName });
+    }
+
+    /**
      * Busca un diagnóstico por ID
      */
     async findById(id) {

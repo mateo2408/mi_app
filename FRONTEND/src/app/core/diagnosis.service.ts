@@ -6,7 +6,16 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Disease, Diagnosis, DiagnosisResponse, NewDisease, OutbreakSummary } from './diagnosis.models';
+import {
+  ApplyTreatmentRequest,
+  ApplyTreatmentResponse,
+  Disease,
+  Diagnosis,
+  DiagnosisResponse,
+  NewDisease,
+  OutbreakSummary,
+  TreatmentCasesResponse
+} from './diagnosis.models';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 import { Pet } from './models';
@@ -63,6 +72,24 @@ export class DiagnosisService {
    */
   getOutbreakSummary(): Observable<OutbreakSummary> {
     return this.http.get<OutbreakSummary>(this.apiUrl + '/analyze/all', { headers: this.getAuthHeaders() });
+  }
+
+  /**
+   * Obtiene las mascotas con casos activos de una enfermedad/brote.
+   */
+  getTreatmentCases(diseaseId: string): Observable<TreatmentCasesResponse> {
+    return this.http.get<TreatmentCasesResponse>(`${this.apiUrl}/treatment/${diseaseId}/cases`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
+   * Aplica un tratamiento y descuenta el medicamento del inventario.
+   */
+  applyTreatment(payload: ApplyTreatmentRequest): Observable<ApplyTreatmentResponse> {
+    return this.http.post<ApplyTreatmentResponse>(`${this.apiUrl}/treatment/apply`, payload, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   /**

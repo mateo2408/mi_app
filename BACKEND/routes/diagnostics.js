@@ -3,6 +3,8 @@ const { requireAuth } = require('../middleware/auth');
 const {
     createDiagnostic,
     createDisease,
+    getTreatmentCases,
+    applyTreatment,
     getDiseases,
     getCriticalDiseases,
     analyzeOutbreak,
@@ -16,6 +18,8 @@ const router = express.Router();
 router.post('/', requireAuth, createDiagnostic);
 router.get('/catalog', requireAuth, getDiseases);
 router.post('/catalog', requireAuth, createDisease);
+router.get('/treatment/:diseaseId/cases', requireAuth, getTreatmentCases);
+router.post('/treatment/apply', requireAuth, applyTreatment);
 
 // Análisis Epidemiológico (CORE)
 router.get('/critical-diseases', requireAuth, getCriticalDiseases);

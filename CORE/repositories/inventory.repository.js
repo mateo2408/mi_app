@@ -25,6 +25,17 @@ class InventoryRepository {
     async update(id, data) {
         return await MedicationInventory.findByIdAndUpdate(id, data, { new: true }).lean();
     }
+
+    async adjustByMedicationKey(medicationKey, delta) {
+        return await MedicationInventory.findOneAndUpdate(
+            {
+                medicationKey,
+                ...(delta < 0 ? { stock: { $gte: Math.abs(delta) } } : {})
+            },
+            { $inc: { stock: delta } },
+            { new: true }
+        ).lean();
+    }
 }
 
 module.exports = new InventoryRepository();
