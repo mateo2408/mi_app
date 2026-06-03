@@ -29,6 +29,7 @@ import { AuthService } from './auth.service';
           <a routerLink="/app/appointments" routerLinkActive="active">Citas</a>
           <a routerLink="/app/records" routerLinkActive="active">Historia clínica</a>
           <a routerLink="/app/diagnostics" routerLinkActive="active">Diagnósticos</a>
+          <a routerLink="/app/treatments" routerLinkActive="active">Tratamientos</a>
           <a routerLink="/app/inventory" routerLinkActive="active">Inventario</a>
         </nav>
       </aside>

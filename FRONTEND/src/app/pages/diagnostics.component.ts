@@ -4,18 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { DiagnosisService } from '../core/diagnosis.service';
 import {
   Alert,
-  ApplyTreatmentResponse,
   Disease,
   Diagnosis,
   NewDisease,
-  OutbreakAnalysis,
-  OutbreakSummary,
-  TreatmentCase
+  OutbreakSummary
 } from '../core/diagnosis.models';
 import { Pet } from '../core/models';
 
 interface ChartItem {
-  diseaseId: string;
   name: string;
   caseCount: number;
   threshold: number;
@@ -192,81 +188,6 @@ interface ChartItem {
         </article>
       </section>
 
-      <section class="panel treatment-panel">
-        <div class="panel-header panel-header-row">
-          <div>
-            <p class="eyebrow">Tratamientos</p>
-            <h3>Administrar tratamiento sobre un brote</h3>
-            <p>Selecciona un brote activo para ver las mascotas registradas con esa enfermedad.</p>
-          </div>
-        </div>
-
-        <div class="treatment-layout">
-          <div class="treatment-selector">
-            <label class="field-label">Brote activo</label>
-            <select
-              [(ngModel)]="selectedTreatmentDiseaseId"
-              name="selectedTreatmentDiseaseId"
-              (ngModelChange)="onTreatmentDiseaseChange($event)"
-              class="field-input bg-white"
-            >
-              <option value="" disabled>Seleccione un brote</option>
-              <option *ngFor="let item of outbreakItems" [value]="item.diseaseId">
-                {{ item.name }} · {{ item.caseCount }} casos
-              </option>
-            </select>
-
-            <div *ngIf="treatmentAnalysis as analysis" class="treatment-analysis">
-              <strong>{{ analysis.diseaseInfo?.name }}</strong>
-              <p>{{ analysis.caseCount }} casos | umbral {{ analysis.threshold }}</p>
-              <small>Medicamento: {{ analysis.diseaseInfo?.medication }}</small>
-            </div>
-          </div>
-
-          <div class="treatment-cases">
-            <div class="panel-header panel-header-row compact-header">
-              <div>
-                <h4>Mascotas afectadas</h4>
-                <p>Cada tratamiento reduce un caso y descuenta una unidad del inventario.</p>
-              </div>
-              <button type="button" class="action-button secondary-button" (click)="reloadTreatmentCases()">
-                Recargar casos
-              </button>
-            </div>
-
-            <div *ngIf="treatmentSuccess" class="alert-panel alert-success compact-message">
-              {{ treatmentSuccess }}
-            </div>
-
-            <div *ngIf="treatmentError" class="alert-panel alert-danger compact-message">
-              <strong>Error:</strong> {{ treatmentError }}
-            </div>
-
-            <div *ngIf="treatmentLoading" class="empty-state">Cargando casos del brote...</div>
-
-            <div *ngIf="!treatmentLoading && treatmentCases.length === 0" class="empty-state">
-              Selecciona un brote para ver las mascotas afectadas.
-            </div>
-
-            <div *ngIf="!treatmentLoading && treatmentCases.length > 0" class="case-list">
-              <div class="case-row" *ngFor="let caseItem of treatmentCases">
-                <div>
-                  <strong>{{ caseItem.petName }}</strong>
-                  <p>Registrado el {{ caseItem.date | date: 'mediumDate' }}</p>
-                </div>
-                <button
-                  type="button"
-                  class="action-button primary-button case-button"
-                  [disabled]="applyingTreatment"
-                  (click)="applyTreatment(caseItem)"
-                >
-                  {{ applyingTreatment ? 'Aplicando...' : 'Administrar tratamiento' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
     </section>
   `,
   styles: [
@@ -482,78 +403,8 @@ interface ChartItem {
         background: rgba(248, 250, 252, 0.9);
       }
 
-      .treatment-panel {
-        display: grid;
-        gap: 18px;
-      }
-
-      .treatment-layout {
-        display: grid;
-        grid-template-columns: 320px minmax(0, 1fr);
-        gap: 18px;
-      }
-
-      .treatment-selector,
-      .treatment-cases {
-        display: grid;
-        gap: 14px;
-      }
-
-      .treatment-analysis {
-        padding: 16px;
-        border-radius: 18px;
-        background: linear-gradient(180deg, rgba(14, 165, 233, 0.08), rgba(15, 23, 42, 0.02));
-      }
-
-      .treatment-analysis strong,
-      .case-row strong {
-        display: block;
-        color: #0f172a;
-      }
-
-      .treatment-analysis p,
-      .treatment-analysis small,
-      .case-row p {
-        margin: 4px 0 0;
-        color: #64748b;
-      }
-
-      .case-list {
-        display: grid;
-        gap: 12px;
-      }
-
-      .case-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 14px;
-        align-items: center;
-        padding: 14px 16px;
-        border-radius: 18px;
-        border: 1px solid rgba(148, 163, 184, 0.16);
-        background: #fff;
-      }
-
-      .case-button {
-        width: auto;
-        white-space: nowrap;
-      }
-
-      .compact-header {
-        margin-bottom: 6px;
-      }
-
-      .compact-message {
-        padding: 12px 14px;
-        border-radius: 16px;
-      }
-
       @media (max-width: 1180px) {
         .workspace-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .treatment-layout {
           grid-template-columns: 1fr;
         }
 
@@ -573,8 +424,7 @@ interface ChartItem {
         }
 
         .chart-meta,
-        .panel-header-row,
-        .case-row {
+        .panel-header-row {
           flex-direction: column;
           align-items: flex-start;
         }
@@ -588,17 +438,9 @@ export class DiagnosticsComponent implements OnInit {
   pets: Pet[] = [];
   catalog: Disease[] = [];
   chartItems: ChartItem[] = [];
-  outbreakItems: ChartItem[] = [];
   diagnosis: Diagnosis = { petName: '', diseaseId: '' };
   selectedPetId = '';
   newDisease: NewDisease = { name: '', medication: '', outbreakThreshold: 6 };
-  selectedTreatmentDiseaseId = '';
-  treatmentCases: TreatmentCase[] = [];
-  treatmentAnalysis: OutbreakAnalysis | null = null;
-  treatmentLoading = false;
-  applyingTreatment = false;
-  treatmentSuccess = '';
-  treatmentError = '';
   diagnosticAlert: Alert | null = null;
   successMessage = '';
   apiError = '';
@@ -632,52 +474,8 @@ export class DiagnosticsComponent implements OnInit {
     this.svc.getOutbreakSummary().subscribe({
       next: (data) => {
         this.chartItems = this.buildChartItems(data);
-        this.outbreakItems = this.chartItems.filter((item) => item.isOutbreak);
-
-        if (!this.selectedTreatmentDiseaseId && this.outbreakItems.length > 0) {
-          this.selectedTreatmentDiseaseId = this.outbreakItems[0].diseaseId;
-          this.loadTreatmentCases(this.selectedTreatmentDiseaseId);
-        }
       },
       error: (err) => console.error('Fallo la carga del grafico:', err)
-    });
-  }
-
-  reloadTreatmentCases(): void {
-    if (this.selectedTreatmentDiseaseId) {
-      this.loadTreatmentCases(this.selectedTreatmentDiseaseId);
-    }
-  }
-
-  onTreatmentDiseaseChange(diseaseId: string): void {
-    this.selectedTreatmentDiseaseId = diseaseId;
-    this.loadTreatmentCases(diseaseId);
-  }
-
-  loadTreatmentCases(diseaseId: string): void {
-    if (!diseaseId) {
-      this.treatmentCases = [];
-      this.treatmentAnalysis = null;
-      return;
-    }
-
-    this.treatmentLoading = true;
-    this.treatmentError = '';
-
-    this.svc.getTreatmentCases(diseaseId).subscribe({
-      next: (response) => {
-        this.treatmentCases = response.cases;
-        this.treatmentAnalysis = response.analysis;
-        this.selectedTreatmentDiseaseId = response.disease._id;
-        this.treatmentLoading = false;
-      },
-      error: (err) => {
-        console.error('Fallo la carga de casos de tratamiento:', err);
-        this.treatmentError = err.error?.message || 'No se pudieron cargar los casos del brote.';
-        this.treatmentCases = [];
-        this.treatmentAnalysis = null;
-        this.treatmentLoading = false;
-      },
     });
   }
 
@@ -699,7 +497,6 @@ export class DiagnosticsComponent implements OnInit {
     const maxCases = Math.max(...sortedResults.map((item) => item.caseCount), 1);
 
     return sortedResults.map((item) => ({
-      diseaseId: item.diseaseInfo?.id || '',
       name: item.diseaseInfo?.name || 'Enfermedad sin nombre',
       caseCount: item.caseCount,
       threshold: item.threshold,
@@ -767,33 +564,6 @@ export class DiagnosticsComponent implements OnInit {
         console.error('Error al crear la enfermedad:', err);
         this.apiError = err.error?.message || 'No se pudo crear la enfermedad.';
       }
-    });
-  }
-
-  applyTreatment(caseItem: TreatmentCase): void {
-    if (!this.selectedTreatmentDiseaseId) {
-      this.treatmentError = 'Selecciona primero un brote activo.';
-      return;
-    }
-
-    this.treatmentSuccess = '';
-    this.treatmentError = '';
-    this.applyingTreatment = true;
-
-    this.svc.applyTreatment({ diseaseId: this.selectedTreatmentDiseaseId, petName: caseItem.petName }).subscribe({
-      next: (response: ApplyTreatmentResponse) => {
-        this.treatmentSuccess = `${response.message}. Se redujo el stock del medicamento y se actualizo el conteo de casos.`;
-        this.diagnosticAlert = response.outbreakAnalysis.alert;
-        this.reloadAllData();
-        this.loadTreatmentCases(this.selectedTreatmentDiseaseId);
-        setTimeout(() => (this.treatmentSuccess = ''), 3500);
-        this.applyingTreatment = false;
-      },
-      error: (err) => {
-        console.error('Error aplicando el tratamiento:', err);
-        this.treatmentError = err.error?.message || 'No se pudo administrar el tratamiento.';
-        this.applyingTreatment = false;
-        }
     });
   }
 

@@ -13,6 +13,7 @@ import { PetsComponent } from './pages/pets.component';
 import { RecordsComponent } from './pages/records.component';
 import { DiagnosticsComponent } from './pages/diagnostics.component';
 import { InventoryComponent } from './pages/inventory.component';
+import { TreatmentsComponent } from './pages/treatments.component';
 
 export const routes: Routes = [
 	// Redirección por defecto a login.
@@ -33,6 +34,7 @@ export const routes: Routes = [
 			{ path: 'appointments', component: AppointmentsComponent },
 			{ path: 'records', component: RecordsComponent },
                         { path: 'diagnostics', component: DiagnosticsComponent },
+                        { path: 'treatments', component: TreatmentsComponent },
                         { path: 'inventory', component: InventoryComponent }
 		]
 	},
