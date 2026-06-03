@@ -7,9 +7,10 @@ const City = require('./models/City');
 async function seed() {
   await connectDatabase();
 
-  await Country.deleteMany({});
-  await Province.deleteMany({});
-  await City.deleteMany({});
+  if (process.env.SEED_DEMO_DATA !== 'true') {
+    console.log('Seed locations omitido: habilita SEED_DEMO_DATA=true para recrear datos de demo');
+    process.exit(0);
+  }
 
   const argentina = await Country.create({ name: 'Argentina' });
   const buenos = await Province.create({ name: 'Buenos Aires', country: argentina._id });

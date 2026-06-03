@@ -32,9 +32,12 @@ const connectDatabase = async () => {
     });
     console.log('Base de datos Atlas conectada exitosamente');
     
-    // Carga de datos iniciales necesarios para el funcionamiento
-    await seedDatabase();
-    await seedDiagnostics();
+    // Los datos de aplicación deben persistir en MongoDB.
+    // Los seeds solo corren cuando se habilitan explícitamente para demos locales.
+    if (process.env.SEED_DEMO_DATA === 'true') {
+      await seedDatabase();
+      await seedDiagnostics();
+    }
     
   } catch (err) {
     console.error('Fallo critico al conectar la BD en Atlas:', err.message);

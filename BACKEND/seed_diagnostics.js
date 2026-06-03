@@ -9,15 +9,26 @@ const Diagnosis = require('./models/Diagnosis');
 
 async function seedDiagnostics() {
     try {
-        // En un entorno didáctico, queremos que cada "reset" regenere exactamente el caso que vamos a probar
-        await Disease.deleteMany({});
-        await Diagnosis.deleteMany({});
+        const ensureDisease = async (data) => {
+            const existing = await Disease.findOne({ name: data.name });
+            if (existing) {
+                return existing;
+            }
 
-        // 1. Catálogo Enfermedad / Medicamento (Garantizado con Threshold en 6)
-        const d1 = await Disease.create({ name: 'Parvovirus Canino', medication: 'Suero Fisiológico y Antibioticoterapia', outbreakThreshold: 6 });
-        const d2 = await Disease.create({ name: 'Leucemia Felina', medication: 'Inmunomoduladores (Fel-O-Vax)', outbreakThreshold: 6 });
-        const d3 = await Disease.create({ name: 'Gastroenteritis Infecciosa', medication: 'Probióticos y Protectores Gástricos', outbreakThreshold: 6 });
-        const d4 = await Disease.create({ name: 'Dermatitis Alérgica', medication: 'Corticoides y Champú Clorhexidina', outbreakThreshold: 6 });
+            return Disease.create(data);
+        };
+
+        // 1. Catálogo Enfermedad / Medicamento (se conserva si ya existe)
+        const d1 = await ensureDisease({ name: 'Parvovirus Canino', medication: 'Suero Fisiológico y Antibioticoterapia', outbreakThreshold: 6 });
+        const d2 = await ensureDisease({ name: 'Leucemia Felina', medication: 'Inmunomoduladores (Fel-O-Vax)', outbreakThreshold: 6 });
+        const d3 = await ensureDisease({ name: 'Gastroenteritis Infecciosa', medication: 'Probióticos y Protectores Gástricos', outbreakThreshold: 6 });
+        const d4 = await ensureDisease({ name: 'Dermatitis Alérgica', medication: 'Corticoides y Champú Clorhexidina', outbreakThreshold: 6 });
+
+        const existingDiagnoses = await Diagnosis.countDocuments();
+        if (existingDiagnoses > 0) {
+            console.log('Seed diagnóstico omitido: ya existen registros en la base de datos');
+            return;
+        }
 
         // 2. Generación iterativa de 40 Registros Históricos Realistas
         const diagnoses = [];
