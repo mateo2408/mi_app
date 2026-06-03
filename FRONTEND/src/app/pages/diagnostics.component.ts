@@ -9,7 +9,7 @@ import {
   NewDisease,
   OutbreakSummary
 } from '../core/diagnosis.models';
-import { Pet } from '../core/models';
+import { InventoryItem, Pet } from '../core/models';
 
 interface ChartItem {
   name: string;
@@ -158,14 +158,12 @@ interface ChartItem {
 
             <div>
               <label class="field-label">Medicamento</label>
-              <input
-                type="text"
-                [(ngModel)]="newDisease.medication"
-                name="medication"
-                required
-                class="field-input"
-                placeholder="Ej. Suero Fisiologico y Antibiotico"
-              />
+              <select [(ngModel)]="newDisease.medication" name="medication" required class="field-input bg-white">
+                <option value="" disabled>Seleccione un medicamento del inventario</option>
+                <option *ngFor="let item of inventoryItems" [value]="item.medication">
+                  {{ item.medication }} - {{ item.stock }} {{ item.unit }}
+                </option>
+              </select>
             </div>
 
             <div>
@@ -437,6 +435,7 @@ export class DiagnosticsComponent implements OnInit {
 
   pets: Pet[] = [];
   catalog: Disease[] = [];
+  inventoryItems: InventoryItem[] = [];
   chartItems: ChartItem[] = [];
   diagnosis: Diagnosis = { petName: '', diseaseId: '' };
   selectedPetId = '';
@@ -469,6 +468,16 @@ export class DiagnosticsComponent implements OnInit {
         }
       },
       error: (err) => console.error('Fallo la carga del catalogo:', err)
+    });
+
+    this.svc.getInventory().subscribe({
+      next: (data) => {
+        this.inventoryItems = data;
+        if (!this.newDisease.medication && this.inventoryItems.length > 0) {
+          this.newDisease.medication = this.inventoryItems[0].medication;
+        }
+      },
+      error: (err) => console.error('Fallo la carga del inventario:', err)
     });
 
     this.svc.getOutbreakSummary().subscribe({

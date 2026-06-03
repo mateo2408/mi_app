@@ -18,7 +18,7 @@ import {
 } from './diagnosis.models';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
-import { Pet } from './models';
+import { InventoryItem, Pet } from './models';
 
 /**
  * El decorador @Injectable permite que esta clase sea inyectada
@@ -58,6 +58,13 @@ export class DiagnosisService {
    */
   getPets(): Observable<Pet[]> {
     return this.http.get<Pet[]>(`${environment.apiBaseUrl}/pets`, { headers: this.getAuthHeaders() });
+  }
+
+  /**
+   * Obtiene el inventario actual para que otros formularios reutilicen los medicamentos existentes.
+   */
+  getInventory(): Observable<InventoryItem[]> {
+    return this.http.get<InventoryItem[]>(`${environment.apiBaseUrl}/inventory`, { headers: this.getAuthHeaders() });
   }
 
   /**
