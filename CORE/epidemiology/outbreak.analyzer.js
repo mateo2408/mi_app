@@ -37,7 +37,7 @@ class OutbreakAnalyzer {
      */
     async analyzeDisease(diseaseId, threshold = 6, windowDays = 60) {
         try {
-            // 1. Obtener información de la enfermedad
+            // 1. Obtener la enfermedad para leer su medicamento y umbral configurado.
             const disease = await this.diseaseRepository.findById(diseaseId);
             if (!disease) {
                 return {
@@ -48,10 +48,10 @@ class OutbreakAnalyzer {
                 };
             }
 
-            // 2. Usar el threshold configurado en la enfermedad si existe
+            // 2. Usar el umbral propio de la enfermedad cuando exista.
             const effectiveThreshold = disease.outbreakThreshold || threshold;
 
-            // 3. Obtener diagnósticos recientes
+            // 3. Recuperar los casos recientes que entran en la ventana de analisis.
             const recentDiagnoses = await this.diagnosisRepository.findRecentByDisease(
                 diseaseId,
                 windowDays
@@ -59,15 +59,15 @@ class OutbreakAnalyzer {
 
             const caseCount = recentDiagnoses.length;
 
-            // 4. Determinar disponibilidad de medicamento en inventario
+            // 4. Leer el inventario asociado al tratamiento para mostrar alertas utiles.
             const medicationAvailability = this.inventoryService
                 ? await this.inventoryService.getMedicationAvailability(disease.medication)
                 : null;
 
-            // 5. Determinar si hay brote
+            // 5. Comparar casos contra umbral para decidir si ya existe brote.
             const isOutbreak = caseCount >= effectiveThreshold;
 
-            // 6. Construir respuesta
+            // 6. Construir una respuesta lista para dashboard y pantallas de detalle.
             const result = {
                 isOutbreak,
                 caseCount,
@@ -83,7 +83,7 @@ class OutbreakAnalyzer {
                 alert: null
             };
 
-            // 7. Si hay brote, crear alerta
+            // 7. Si hay brote, generar una alerta estructurada con recomendacion.
             if (isOutbreak) {
                 result.alert = this._generateAlert(disease, caseCount, effectiveThreshold, medicationAvailability);
             }
@@ -102,6 +102,7 @@ class OutbreakAnalyzer {
      */
     async analyzeAllDiseases() {
         try {
+            // Recorre todo el catalogo para construir el estado epidemiologico global.
             const diseases = await this.diseaseRepository.findAll();
             const results = [];
             const activeOutbreaks = [];
@@ -136,6 +137,7 @@ class OutbreakAnalyzer {
      */
     async compareEpidemiology(diseaseId1, diseaseId2) {
         try {
+            // Ejecuta dos analisis independientes y arma una comparacion entre ambos resultados.
             const analysis1 = await this.analyzeDisease(diseaseId1);
             const analysis2 = await this.analyzeDisease(diseaseId2);
 
@@ -161,6 +163,7 @@ class OutbreakAnalyzer {
      * @private
      */
     _generateAlert(disease, caseCount, threshold, medicationAvailability) {
+        // Traduce el estado de casos y stock a un mensaje accionable para el usuario.
         const inventoryInfo = medicationAvailability
             ? {
                 medication: medicationAvailability.medication,
@@ -200,6 +203,7 @@ class OutbreakAnalyzer {
      * @private
      */
     _calculateSeverity(caseCount, threshold) {
+        // La severidad crece cuando los casos superan con mas margen el umbral.
         const excessRatio = caseCount / threshold;
         if (excessRatio >= 2) return 'CRITICAL';
         if (excessRatio >= 1.5) return 'HIGH';
@@ -211,6 +215,7 @@ class OutbreakAnalyzer {
      * @private
      */
     _formatStockStatus(status) {
+        // Convierte el codigo interno del stock en texto entendible para el reporte.
         if (status === 'out') return 'agotado';
         if (status === 'low') return 'bajo';
         if (status === 'missing') return 'sin registro';

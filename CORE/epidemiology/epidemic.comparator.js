@@ -19,6 +19,7 @@ class EpidemicComparator {
      * @returns {Object} - Análisis comparativo detallado
      */
     async compareDisease(diseaseId1, diseaseId2) {
+        // Reutiliza el analizador y agrega una interpretacion humana del resultado.
         const comparison = await this.outbreakAnalyzer.compareEpidemiology(diseaseId1, diseaseId2);
         
         return {
@@ -32,6 +33,7 @@ class EpidemicComparator {
      * @returns {Object} - Enfermedades agrupadas por estado
      */
     async classifyDiseasesByOutbreakStatus() {
+        // Ordena las enfermedades por estado para mostrarlas en dashboards o reportes.
         const analysis = await this.outbreakAnalyzer.analyzeAllDiseases();
         
         const classified = {
@@ -42,6 +44,7 @@ class EpidemicComparator {
 
         for (const result of analysis.analysisResults) {
             if (result.isOutbreak) {
+                // Los brotes se envian con severidad para priorizar la atencion.
                 classified.outbreaks.push({
                     disease: result.diseaseInfo.name,
                     cases: result.caseCount,
@@ -49,7 +52,7 @@ class EpidemicComparator {
                     severity: this._determineSeverity(result.caseCount, result.threshold)
                 });
             } else if (result.caseCount >= result.threshold * 0.7) {
-                // 70% del threshold = en riesgo
+                // Casos cercanos al umbral pasan a la categoria de vigilancia.
                 classified.atRisk.push({
                     disease: result.diseaseInfo.name,
                     cases: result.caseCount,
@@ -73,6 +76,7 @@ class EpidemicComparator {
      * @returns {Object} - Reporte estructurado
      */
     async generateEpidemicReport() {
+        // Consolida el estado total, clasificaciones y recomendaciones en un solo objeto.
         const analysis = await this.outbreakAnalyzer.analyzeAllDiseases();
         const classified = await this.classifyDiseasesByOutbreakStatus();
 
@@ -114,6 +118,7 @@ class EpidemicComparator {
      * @private
      */
     _interpretComparison(comparison) {
+        // Convierte numeros y ratios en una lectura simple para el usuario final.
         const caseRatio = comparison.comparison.caseRatio;
         let interpretation = '';
 
@@ -138,6 +143,7 @@ class EpidemicComparator {
      * @private
      */
     _determineSeverity(caseCount, threshold) {
+        // Reusa una escala simple para no duplicar reglas de severidad en el reporte.
         const ratio = caseCount / threshold;
         if (ratio >= 2) return 'CRITICAL';
         if (ratio >= 1.5) return 'HIGH';
@@ -149,6 +155,7 @@ class EpidemicComparator {
      * @private
      */
     _generateRecommendations(classified, analysis, outbreakMedicationStatus = []) {
+        // Prioriza acciones segun brotes activos, riesgo y disponibilidad de stock.
         const recommendations = [];
 
         const criticalStock = outbreakMedicationStatus.filter((item) => item.status === 'out' || item.status === 'missing');

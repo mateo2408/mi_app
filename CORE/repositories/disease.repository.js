@@ -10,6 +10,7 @@ class DiseaseRepository {
      * Busca una enfermedad por ID
      */
     async findById(id) { 
+        // Consulta una enfermedad por id y devuelve un documento plano para el servicio.
         return await Disease.findById(id).lean(); 
     }
 
@@ -17,6 +18,7 @@ class DiseaseRepository {
      * Obtiene todas las enfermedades
      */
     async findAll() { 
+        // Devuelve el catalogo completo de enfermedades sin metadatos de Mongoose.
         return await Disease.find().lean(); 
     }
 
@@ -24,6 +26,7 @@ class DiseaseRepository {
      * Busca una enfermedad por nombre
      */
     async findByName(name) {
+        // Busca por nombre exacto cuando el servicio necesita evitar duplicados.
         return await Disease.findOne({ name: name }).lean();
     }
 
@@ -31,6 +34,7 @@ class DiseaseRepository {
      * Crea una nueva enfermedad
      */
     async create(data) {
+        // Persiste una nueva enfermedad para que quede disponible en el catalogo.
         return await Disease.create(data);
     }
 
@@ -38,6 +42,7 @@ class DiseaseRepository {
      * Actualiza una enfermedad
      */
     async update(id, data) {
+        // Devuelve el registro actualizado para seguir trabajando con el estado nuevo.
         return await Disease.findByIdAndUpdate(id, data, { new: true }).lean();
     }
 }

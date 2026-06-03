@@ -11,6 +11,7 @@ class DiagnosisRepository {
      * @param {Object} data - Datos del diagnóstico (petName, diseaseId).
      */
     async create(data) { 
+        // Inserta diagnosticos nuevos que luego alimentan el grafico y el calculo de brotes.
         return await Diagnosis.create(data); 
     }
     
@@ -23,6 +24,7 @@ class DiagnosisRepository {
      * @param {Number} days - Cantidad de días hacia atrás a buscar (por defecto 60)
      */
     async findRecentByDisease(diseaseId, days = 60) {
+        // Solo trae diagnosticos dentro de la ventana temporal usada por el analisis epidemiologico.
         const sinceDate = new Date();
         sinceDate.setDate(sinceDate.getDate() - days);
         
@@ -43,6 +45,7 @@ class DiagnosisRepository {
      * Busca diagnósticos por enfermedad ordenados por fecha descendente.
      */
     async findByDiseaseSorted(diseaseId) {
+        // Orden descendente para que las pantallas de tratamiento muestren primero los casos mas nuevos.
         return await Diagnosis.find({ diseaseId: diseaseId }).sort({ date: -1 }).lean();
     }
 
@@ -50,6 +53,7 @@ class DiagnosisRepository {
      * Elimina un diagnostico especifico asociado a una mascota y una enfermedad.
      */
     async deleteByDiseaseAndPetName(diseaseId, petName) {
+        // Se usa para revertir una aplicacion de tratamiento cuando ocurre un error.
         return await Diagnosis.findOneAndDelete({ diseaseId: diseaseId, petName: petName });
     }
 

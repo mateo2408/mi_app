@@ -21,21 +21,21 @@ const DiseaseService = require('./epidemiology/disease.service');
 const EpidemicComparator = require('./epidemiology/epidemic.comparator');
 const InventoryService = require('./inventory/inventory.service');
 
-// Inyección de dependencias: Instancia los servicios con sus dependencias
+// Inyección de dependencias: cada servicio recibe sus repositorios para mantener la lógica desacoplada.
 const inventoryService = new InventoryService(InventoryRepository);
 const outbreakAnalyzer = new OutbreakAnalyzer(DiagnosisRepository, DiseaseRepository, inventoryService);
 const diseaseService = new DiseaseService(DiseaseRepository);
 const epidemicComparator = new EpidemicComparator(outbreakAnalyzer);
 
 module.exports = {
-    // Repositories (acceso a datos)
+    // Repositories: exponen acceso directo a datos cuando otro modulo necesita consultas puras.
     repositories: {
         DiagnosisRepository,
         DiseaseRepository,
         InventoryRepository
     },
 
-    // Servicios (lógica de negocio)
+    // Servicios: concentran validaciones, calculos y reglas de negocio reutilizables.
     services: {
         OutbreakAnalyzer: outbreakAnalyzer,
         DiseaseService: diseaseService,
@@ -43,13 +43,13 @@ module.exports = {
         InventoryService: inventoryService
     },
 
-    // Alias para acceso directo
+    // Alias directos para facilitar imports simples desde otros modulos.
     outbreakAnalyzer,
     diseaseService,
     epidemicComparator,
     inventoryService,
 
-    // Clases para instancias personalizadas si es necesario
+    // Clases base por si algun modulo necesita instanciar variantes personalizadas.
     OutbreakAnalyzer,
     DiseaseService,
     EpidemicComparator,

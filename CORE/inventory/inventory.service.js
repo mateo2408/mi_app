@@ -12,10 +12,12 @@ class InventoryService {
     }
 
     _normalizeMedicationName(value) {
+        // Normaliza el nombre para comparar inventarios sin depender de mayusculas, espacios o formato.
         return String(value || '').trim().toLowerCase();
     }
 
     _parseNumber(value, field, errors) {
+        // Convierte valores de entrada a numero y acumula errores si el dato no es valido.
         if (value === undefined || value === null || value === '') {
             return undefined;
         }
@@ -28,12 +30,14 @@ class InventoryService {
     }
 
     _buildStockStatus(stock, minStock) {
+        // Clasifica el estado del inventario segun el stock disponible y el minimo esperado.
         if (stock <= 0) return 'out';
         if (stock <= minStock) return 'low';
         return 'ok';
     }
 
     _enrichItem(item) {
+        // Agrega campos derivados para que la UI reciba una vista lista para consumir.
         if (!item) return null;
         const stock = Number(item.stock) || 0;
         const minStock = Number(item.minStock) || 0;
@@ -52,6 +56,7 @@ class InventoryService {
         const errors = [];
         const data = {};
 
+        // Valida el nombre del medicamento solo cuando es obligatorio o viene en el payload.
         if (payload.medication !== undefined || requireMedication) {
             if (!payload.medication || typeof payload.medication !== 'string' || payload.medication.trim() === '') {
                 errors.push('El nombre del medicamento es requerido');
@@ -67,6 +72,7 @@ class InventoryService {
             }
         }
 
+        // Validaciones numericas de stock y stock minimo.
         const stock = this._parseNumber(payload.stock, 'stock', errors);
         if (stock !== undefined) {
             data.stock = stock;
@@ -77,6 +83,7 @@ class InventoryService {
             data.minStock = minStock;
         }
 
+        // La unidad debe ser texto legible para mostrarla en el frontend.
         if (payload.unit !== undefined) {
             if (typeof payload.unit !== 'string' || payload.unit.trim() === '') {
                 errors.push('La unidad es requerida');
@@ -93,11 +100,13 @@ class InventoryService {
     }
 
     async listInventory() {
+        // Recupera todos los items y les agrega estado calculado antes de entregarlos.
         const items = await this.inventoryRepository.findAll();
         return items.map((item) => this._enrichItem(item));
     }
 
     async getSummary() {
+        // Resume el inventario para paneles y tarjetas de estado.
         const items = await this.listInventory();
         const totalUnits = items.reduce((sum, item) => sum + (item.stock || 0), 0);
         const lowStockItems = items.filter((item) => item.stockStatus !== 'ok');
@@ -113,6 +122,7 @@ class InventoryService {
     }
 
     async getMedicationAvailability(medicationName) {
+        // Consulta el inventario usando la version normalizada del nombre.
         const normalized = this._normalizeMedicationName(medicationName);
         if (!normalized) {
             return {
@@ -153,6 +163,7 @@ class InventoryService {
     }
 
     async createItem(payload) {
+        // Primero valida la entrada y luego protege contra duplicados por clave normalizada.
         const validation = this.validateInventoryData(payload, { requireMedication: true });
         if (!validation.valid) {
             return { ok: false, status: 400, errors: validation.errors, message: validation.errors.join(', ') };
@@ -176,6 +187,7 @@ class InventoryService {
     }
 
     async updateItem(id, payload) {
+        // La actualizacion permite cambios parciales, pero mantiene la unicidad del medicamento.
         const validation = this.validateInventoryData(payload, { requireMedication: false });
         if (!validation.valid) {
             return { ok: false, status: 400, errors: validation.errors, message: validation.errors.join(', ') };
@@ -201,6 +213,7 @@ class InventoryService {
     }
 
     async consumeMedication(medicationName, quantity = 1) {
+        // Descuenta stock cuando se aplica un tratamiento y evita romper el inventario si no alcanza.
         const normalized = this._normalizeMedicationName(medicationName);
         const safeQuantity = Number(quantity) || 0;
 
@@ -226,6 +239,7 @@ class InventoryService {
     }
 
     async restoreMedication(medicationName, quantity = 1) {
+        // Revierte el descuento si una operacion de tratamiento falla a mitad del proceso.
         const normalized = this._normalizeMedicationName(medicationName);
         const safeQuantity = Number(quantity) || 0;
 
