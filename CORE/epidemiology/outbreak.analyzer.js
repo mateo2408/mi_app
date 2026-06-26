@@ -1,15 +1,23 @@
 /**
  * CORE SERVICE: Outbreak Analyzer (Analizador de Brotes)
- * 
+ *
  * Responsabilidad: Contiene la lógica de negocio para análisis epidemiológico.
  * Este es el corazón inteligente de la aplicación.
- * 
+ *
  * Regla de Negocio Principal:
  * - Si se detectan 6 o más casos de una enfermedad en los últimos 60 días,
  *   se activa una alerta de reabastecimiento de farmacia.
- * 
- * Patrón: Inyección de dependencias para repositories
+ *
+ * Patrones:
+ * - Inyección de dependencias (DIP) para repositories
+ * - Factory Method: delega creación de alertas a AlertFactory
+ *
+ * SOLID:
+ * - SRP: solo analiza brotes; no persiste datos ni maneja HTTP
+ * - OCP: nuevos tipos de alerta se agregan en AlertFactory sin modificar este servicio
  */
+
+const { AlertFactory } = require('../patterns/alert.factory');
 
 class OutbreakAnalyzer {
     constructor(diagnosisRepository, diseaseRepository, inventoryService) {
@@ -87,9 +95,14 @@ class OutbreakAnalyzer {
                 alert: null
             };
 
-            // 7. Si hay brote, generar una alerta estructurada con recomendacion.
+            // 7. Si hay brote, delegar la creación de la alerta al Factory Method.
             if (isOutbreak) {
-                result.alert = this._generateAlert(disease, caseCount, effectiveThreshold, medicationAvailabilities);
+                result.alert = AlertFactory.create('OUTBREAK', {
+                    disease,
+                    caseCount,
+                    threshold: effectiveThreshold,
+                    medicationAvailabilities
+                });
             }
 
             return result;
@@ -160,74 +173,6 @@ class OutbreakAnalyzer {
             console.error('[OutbreakAnalyzer] Error en compareEpidemiology:', error);
             throw error;
         }
-    }
-
-    /**
-     * Genera una alerta estructurada
-     * @private
-     */
-    _generateAlert(disease, caseCount, threshold, medicationAvailability) {
-        // Traduce el estado de casos y stock a un mensaje accionable para el usuario.
-        const inventoryInfo = medicationAvailability
-            ? medicationAvailability.map((item) => ({
-                medication: item.medication,
-                available: item.available,
-                minStock: item.minStock,
-                unit: item.unit,
-                status: item.status,
-                needsRestock: item.needsRestock
-            }))
-            : [];
-
-        const inventoryNote = inventoryInfo.length > 0
-            ? inventoryInfo
-                .map((item) => `${item.medication}: ${item.available} ${item.unit} (${this._formatStockStatus(item.status)})`)
-                .join(' | ')
-            : 'Stock no registrado en inventario';
-
-        const medicationList = inventoryInfo.map((item) => item.medication);
-        const recommendation = medicationList.length > 0
-            ? `Opciones de tratamiento: ${medicationList.join(', ')}. Casos: ${caseCount}/${threshold}. ${inventoryNote}`
-            : `No hay medicamentos asociados. Casos: ${caseCount}/${threshold}. ${inventoryNote}`;
-
-        return {
-            type: 'OUTBREAK_ALERT',
-            severity: this._calculateSeverity(caseCount, threshold),
-            message: `ALERTA EPIDEMIOLÓGICA: ${caseCount} casos de ${disease.name} detectados en los últimos 60 días`,
-            status: true,
-            activeCases: caseCount,
-            diseaseName: disease.name,
-            medication: disease.medication,
-            medications: inventoryInfo,
-            threshold,
-            recommendation,
-            inventory: inventoryInfo[0] || null,
-            timestamp: new Date().toISOString()
-        };
-    }
-
-    /**
-     * Calcula la severidad de la alerta basada en exceso del threshold
-     * @private
-     */
-    _calculateSeverity(caseCount, threshold) {
-        // La severidad crece cuando los casos superan con mas margen el umbral.
-        const excessRatio = caseCount / threshold;
-        if (excessRatio >= 2) return 'CRITICAL';
-        if (excessRatio >= 1.5) return 'HIGH';
-        return 'MEDIUM';
-    }
-
-    /**
-     * Traduce el estado de stock a un mensaje legible
-     * @private
-     */
-    _formatStockStatus(status) {
-        // Convierte el codigo interno del stock en texto entendible para el reporte.
-        if (status === 'out') return 'agotado';
-        if (status === 'low') return 'bajo';
-        if (status === 'missing') return 'sin registro';
-        return 'suficiente';
     }
 
     _getDiseaseMedications(disease) {

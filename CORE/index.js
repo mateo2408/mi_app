@@ -1,57 +1,52 @@
 /**
  * CORE - El corazón inteligente de la aplicación VetCore
- * 
+ *
  * Responsabilidad: Contiene toda la lógica de negocio
  * - Análisis epidemiológico
  * - Comparaciones de enfermedades
  * - Validaciones de negocio
- * 
+ *
+ * Patrones aplicados:
+ * - Singleton: ServiceContainer garantiza una única instancia de servicios
+ * - Factory Method: AlertFactory crea alertas epidemiológicas
+ * - SOLID: ver SOLID_PRINCIPLES.md
+ *
  * Los servicios aquí son agnósticos a la presentación (HTTP, CLI, etc)
  * y pueden ser reutilizados en múltiples contextos.
  */
 
-// Repositories
-const DiagnosisRepository = require('./repositories/diagnosis.repository');
-const DiseaseRepository = require('./repositories/disease.repository');
-const InventoryRepository = require('./repositories/inventory.repository');
+const ServiceContainer = require('./patterns/service-container.singleton');
+const { AlertFactory } = require('./patterns/alert.factory');
 
-// Services
-const OutbreakAnalyzer = require('./epidemiology/outbreak.analyzer');
-const DiseaseService = require('./epidemiology/disease.service');
-const EpidemicComparator = require('./epidemiology/epidemic.comparator');
-const InventoryService = require('./inventory/inventory.service');
-
-// Inyección de dependencias: cada servicio recibe sus repositorios para mantener la lógica desacoplada.
-const inventoryService = new InventoryService(InventoryRepository);
-const outbreakAnalyzer = new OutbreakAnalyzer(DiagnosisRepository, DiseaseRepository, inventoryService);
-const diseaseService = new DiseaseService(DiseaseRepository);
-const epidemicComparator = new EpidemicComparator(outbreakAnalyzer);
+const container = ServiceContainer.getInstance();
 
 module.exports = {
-    // Repositories: exponen acceso directo a datos cuando otro modulo necesita consultas puras.
-    repositories: {
-        DiagnosisRepository,
-        DiseaseRepository,
-        InventoryRepository
+    // Patrones de diseño
+    patterns: {
+        ServiceContainer,
+        AlertFactory
     },
+
+    // Repositories: exponen acceso directo a datos cuando otro modulo necesita consultas puras.
+    repositories: container.repositories,
 
     // Servicios: concentran validaciones, calculos y reglas de negocio reutilizables.
     services: {
-        OutbreakAnalyzer: outbreakAnalyzer,
-        DiseaseService: diseaseService,
-        EpidemicComparator: epidemicComparator,
-        InventoryService: inventoryService
+        OutbreakAnalyzer: container.services.outbreakAnalyzer,
+        DiseaseService: container.services.diseaseService,
+        EpidemicComparator: container.services.epidemicComparator,
+        InventoryService: container.services.inventoryService
     },
 
     // Alias directos para facilitar imports simples desde otros modulos.
-    outbreakAnalyzer,
-    diseaseService,
-    epidemicComparator,
-    inventoryService,
+    outbreakAnalyzer: container.services.outbreakAnalyzer,
+    diseaseService: container.services.diseaseService,
+    epidemicComparator: container.services.epidemicComparator,
+    inventoryService: container.services.inventoryService,
 
     // Clases base por si algun modulo necesita instanciar variantes personalizadas.
-    OutbreakAnalyzer,
-    DiseaseService,
-    EpidemicComparator,
-    InventoryService
+    OutbreakAnalyzer: require('./epidemiology/outbreak.analyzer'),
+    DiseaseService: require('./epidemiology/disease.service'),
+    EpidemicComparator: require('./epidemiology/epidemic.comparator'),
+    InventoryService: require('./inventory/inventory.service')
 };

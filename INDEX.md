@@ -20,6 +20,15 @@
    - Logros principales
    - Próximos pasos
 
+### Principios SOLID y Patrones de Diseño
+4. **[SOLID_PRINCIPLES.md](./SOLID_PRINCIPLES.md)** - 15 min
+   - Single Responsibility, Open/Closed, Liskov, Interface Segregation, Dependency Inversion
+   - Mapeo a archivos concretos del proyecto
+5. **[DESIGN_PATTERNS.md](./DESIGN_PATTERNS.md)** - 10 min
+   - Singleton (ServiceContainer + Angular DI)
+   - Factory Method (AlertFactory)
+   - Diagramas y ejemplos de uso
+
 ---
 
 ## 📁 Estructura de Carpetas
@@ -28,6 +37,9 @@
 mi_app/
 ├── CORE/                          ← LÓGICA DE NEGOCIO
 │   ├── index.js                   (exporta servicios)
+│   ├── patterns/                  ⭐ PATRONES DE DISEÑO
+│   │   ├── service-container.singleton.js  (Singleton)
+│   │   └── alert.factory.js                (Factory Method)
 │   ├── repositories/              (acceso a datos)
 │   │   ├── diagnosis.repository.js
 │   │   └── disease.repository.js
@@ -52,6 +64,8 @@ mi_app/
 │
 └── Documentación/
     ├── ARCHITECTURE.md            ← LEER PRIMERO
+    ├── SOLID_PRINCIPLES.md        ← PRINCIPIOS SOLID
+    ├── DESIGN_PATTERNS.md         ← SINGLETON + FACTORY METHOD
     ├── PROJECT_SUMMARY.md
     ├── QUICK_REFERENCE.md
     └── INDEX.md (este archivo)

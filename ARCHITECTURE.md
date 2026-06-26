@@ -24,6 +24,9 @@ BACKEND (Express - CRUD)
 ```
 CORE/
 ├── index.js                          # Punto de entrada - Exporta servicios
+├── patterns/                         # Patrones de diseño
+│   ├── service-container.singleton.js  # Singleton: instancia única de servicios
+│   └── alert.factory.js                # Factory Method: creación de alertas
 ├── repositories/
 │   ├── diagnosis.repository.js       # Acceso a datos de diagnósticos
 │   ├── disease.repository.js         # Acceso a datos de enfermedades
@@ -38,8 +41,11 @@ CORE/
 
 **Conceptos Clave:**
 - Los servicios son **agnósticos a HTTP**: Pueden usarse en CLI, eventos, etc.
-- Implementan **inyección de dependencias** para testabilidad
+- Implementan **inyección de dependencias** para testabilidad (DIP)
 - Contienen **toda la lógica de epidemiología** del sistema
+- Aplican **principios SOLID** y patrones **Singleton** + **Factory Method**
+
+> Documentación detallada: [SOLID_PRINCIPLES.md](./SOLID_PRINCIPLES.md) | [DESIGN_PATTERNS.md](./DESIGN_PATTERNS.md)
 
 **Ejemplo: Regla de Negocio Principal**
 ```javascript

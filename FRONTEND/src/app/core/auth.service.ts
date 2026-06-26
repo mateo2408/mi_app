@@ -2,6 +2,9 @@
 // - inicia sesión contra backend
 // - persiste token y usuario
 // - restaura sesión al recargar la app
+//
+// SOLID - SRP: solo gestiona autenticación y sesión.
+// Patrón Singleton: providedIn 'root' → una instancia global en Angular.
 import { computed, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';

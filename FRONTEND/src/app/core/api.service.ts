@@ -1,4 +1,6 @@
 // Servicio HTTP centralizado para operaciones de negocio.
+// SOLID - SRP: solo comunicación HTTP con la API REST.
+// Patrón Singleton: providedIn 'root' → una instancia global en Angular.
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {

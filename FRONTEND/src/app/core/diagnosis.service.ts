@@ -2,6 +2,12 @@
  * Servicio Angular (Service).
  * Actua como puente entre los componentes y la API Backend.
  * Encapsula la logica HTTP para promover la reutilizacion.
+ *
+ * SOLID:
+ * - SRP: solo maneja operaciones HTTP de diagnósticos/epidemiología
+ * - DIP: depende de HttpClient y AuthService (abstracciones), no de fetch directo
+ *
+ * Patrón Singleton: @Injectable({ providedIn: 'root' }) garantiza una única instancia.
  */
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
