@@ -58,13 +58,13 @@ interface RecentDiagnosisItem {
         </div>
       </header>
 
-      <div *ngIf="diagnosticAlert?.status" class="alert-panel alert-danger">
-        <div>
+      <div *ngIf="diagnosticAlert as alert" class="alert-panel alert-danger">
+        <div *ngIf="alert.status">
           <strong class="alert-title">Alerta de Brote Epidemico</strong>
-          <p>{{ diagnosticAlert!.message }}</p>
-          <p *ngIf="diagnosticAlert.inventory" class="alert-inventory">
-            Stock disponible: {{ diagnosticAlert.inventory.available }} {{ diagnosticAlert.inventory.unit }}
-            ({{ inventoryLabel(diagnosticAlert.inventory.status || 'missing') }})
+          <p>{{ alert.message }}</p>
+          <p *ngIf="alert.inventory" class="alert-inventory">
+            Stock disponible: {{ alert.inventory.available }} {{ alert.inventory.unit }}
+            ({{ inventoryLabel(alert.inventory.status || 'missing') }})
           </p>
         </div>
         <button type="button" class="close-button" (click)="diagnosticAlert = null">x</button>
