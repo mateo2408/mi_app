@@ -32,15 +32,35 @@ async function startServer() {
   const app = express();
   const port = process.env.PORT || 3000;
   const corsOrigin = process.env.CORS_ORIGIN;
+  const allowedOrigins = corsOrigin
+    ? corsOrigin.split(',').map((origin) => origin.trim()).filter(Boolean)
+    : [];
+  const corsOptions = {
+    origin: (origin, callback) => {
+      // Permite llamadas servidor-a-servidor o herramientas sin header Origin.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // Si no hay una lista explícita, aceptamos cualquier origen para facilitar consumo externo.
+      if (allowedOrigins.length === 0) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 204
+  };
 
   // 2. Configuracion de Middlewares Globales
-  app.use(
-    cors({
-      origin: corsOrigin
-        ? corsOrigin.split(',').map((origin) => origin.trim())
-        : true
-    })
-  );
+  app.use(cors(corsOptions));
+  app.options('*', cors(corsOptions));
   // express.json() permite que el servidor entienda peticiones con body en formato JSON
   app.use(express.json());
 
