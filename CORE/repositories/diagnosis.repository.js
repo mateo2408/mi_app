@@ -50,6 +50,40 @@ class DiagnosisRepository {
     }
 
     /**
+     * Obtiene un historial reciente de diagnósticos con la enfermedad poblada.
+     */
+    async findRecentWithDisease(days = 30, limit = 10) {
+        const safeDays = Number.isFinite(Number(days)) ? Math.max(1, Number(days)) : 30;
+        const safeLimit = Number.isFinite(Number(limit)) ? Math.min(Math.max(1, Number(limit)), 50) : 10;
+
+        const sinceDate = new Date();
+        sinceDate.setDate(sinceDate.getDate() - safeDays);
+
+        const diagnoses = await Diagnosis.find({
+            date: { $gte: sinceDate }
+        })
+            .sort({ date: -1 })
+            .limit(safeLimit)
+            .populate('diseaseId', 'name medication medications outbreakThreshold')
+            .lean();
+
+        return diagnoses.map((item) => ({
+            _id: item._id,
+            petName: item.petName,
+            date: item.date,
+            disease: item.diseaseId
+                ? {
+                      _id: item.diseaseId._id,
+                      name: item.diseaseId.name,
+                      medication: item.diseaseId.medication,
+                      medications: item.diseaseId.medications || [],
+                      outbreakThreshold: item.diseaseId.outbreakThreshold
+                  }
+                : null
+        }));
+    }
+
+    /**
      * Elimina un diagnostico especifico asociado a una mascota y una enfermedad.
      */
     async deleteByDiseaseAndPetName(diseaseId, petName) {

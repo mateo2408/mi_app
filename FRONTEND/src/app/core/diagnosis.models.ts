@@ -80,6 +80,13 @@ export interface Diagnosis {
     diseaseId: string;
 }
 
+export interface RecentDiagnosis {
+    _id: string;
+    petName: string;
+    date: string;
+    disease: Pick<Disease, '_id' | 'name' | 'medication' | 'medications' | 'outbreakThreshold'> | null;
+}
+
 export interface InventoryAvailability {
     medication: string;
     available: number;

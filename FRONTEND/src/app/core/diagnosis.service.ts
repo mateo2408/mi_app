@@ -1,16 +1,4 @@
-/**
- * Servicio Angular (Service).
- * Actua como puente entre los componentes y la API Backend.
- * Encapsula la logica HTTP para promover la reutilizacion.
- *
- * SOLID:
- * - SRP: solo maneja operaciones HTTP de diagnósticos/epidemiología
- * - DIP: depende de HttpClient y AuthService (abstracciones), no de fetch directo
- *
- * Patrón Singleton: @Injectable({ providedIn: 'root' }) garantiza una única instancia.
- */
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   ApplyTreatmentRequest,
@@ -19,97 +7,57 @@ import {
   Diagnosis,
   DiagnosisResponse,
   NewDisease,
+  RecentDiagnosis,
   OutbreakSummary,
   TreatmentCasesResponse
 } from './diagnosis.models';
-import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 import { InventoryItem, Pet } from './models';
+import { API_CLIENT } from './api-client';
+import { DiagnosticsEndpointFactory } from './diagnostics-endpoints.factory';
 
-/**
- * El decorador @Injectable permite que esta clase sea inyectada
- * en otros componentes. 'providedIn: root' crea un patron Singleton (una sola instancia).
- */
 @Injectable({
   providedIn: 'root'
 })
 export class DiagnosisService {
-  // Cliente HTTP integrado en Angular
-  private http = inject(HttpClient);
-  private authService = inject(AuthService);
-  // URL base estandarizada del backend (express)
-  private apiUrl = `${environment.apiBaseUrl}/diagnostics`;
+  private readonly apiClient = inject(API_CLIENT);
+  private readonly endpoints = DiagnosticsEndpointFactory.create(environment.apiBaseUrl);
 
-  /**
-   * Construye los encabezados HTTP agregando el token JWT 
-   * guardado en LocalStorage para validar la identidad en el backend.
-   */
-  private getAuthHeaders() {
-    const token = this.authService.getToken() || '';
-    return new HttpHeaders({
-      'Authorization': 'Bearer ' + token
-    });
-  }
-
-  /**
-   * Obtiene el listado iterativo de enfermedades disponibles.
-   * Retorna un Observable tipado como un arreglo de Disease [].
-   */
   getDiseases(): Observable<Disease[]> {
-    return this.http.get<Disease[]>(this.apiUrl + '/catalog', { headers: this.getAuthHeaders() });
+    return this.apiClient.get<Disease[]>(this.endpoints.catalog);
   }
 
-  /**
-   * Obtiene el listado de mascotas disponibles para seleccionar en el diagnostico.
-   */
   getPets(): Observable<Pet[]> {
-    return this.http.get<Pet[]>(`${environment.apiBaseUrl}/pets`, { headers: this.getAuthHeaders() });
+    return this.apiClient.get<Pet[]>(this.endpoints.pets);
   }
 
-  /**
-   * Obtiene el inventario actual para que otros formularios reutilicen los medicamentos existentes.
-   */
   getInventory(): Observable<InventoryItem[]> {
-    return this.http.get<InventoryItem[]>(`${environment.apiBaseUrl}/inventory`, { headers: this.getAuthHeaders() });
+    return this.apiClient.get<InventoryItem[]>(this.endpoints.inventory);
   }
 
-  /**
-   * Registra una nueva enfermedad en el catalogo.
-   */
   createDisease(data: NewDisease): Observable<Disease> {
-    return this.http.post<Disease>(this.apiUrl + '/catalog', data, { headers: this.getAuthHeaders() });
+    return this.apiClient.post<Disease>(this.endpoints.createDisease, data);
   }
 
-  /**
-   * Obtiene el resumen epidemiologico para dibujar el grafico en vivo.
-   */
   getOutbreakSummary(): Observable<OutbreakSummary> {
-    return this.http.get<OutbreakSummary>(this.apiUrl + '/analyze/all', { headers: this.getAuthHeaders() });
+    return this.apiClient.get<OutbreakSummary>(this.endpoints.outbreakSummary);
   }
 
-  /**
-   * Obtiene las mascotas con casos activos de una enfermedad/brote.
-   */
   getTreatmentCases(diseaseId: string): Observable<TreatmentCasesResponse> {
-    return this.http.get<TreatmentCasesResponse>(`${this.apiUrl}/treatment/${diseaseId}/cases`, {
-      headers: this.getAuthHeaders()
-    });
+    return this.apiClient.get<TreatmentCasesResponse>(this.endpoints.treatmentCases(diseaseId));
   }
 
-  /**
-   * Aplica un tratamiento y descuenta el medicamento del inventario.
-   */
   applyTreatment(payload: ApplyTreatmentRequest): Observable<ApplyTreatmentResponse> {
-    return this.http.post<ApplyTreatmentResponse>(`${this.apiUrl}/treatment/apply`, payload, {
-      headers: this.getAuthHeaders()
-    });
+    return this.apiClient.post<ApplyTreatmentResponse>(this.endpoints.applyTreatment, payload);
   }
 
-  /**
-   * Envia la informacion json del diagnostico al servidor.
-   * Retorna un tipado estricto { diagnosis, alert } previniendo el uso del antihypattern 'any'.
-   */
   saveDiagnosis(data: Diagnosis): Observable<DiagnosisResponse> {
-    return this.http.post<DiagnosisResponse>(this.apiUrl, data, { headers: this.getAuthHeaders() });
+    return this.apiClient.post<DiagnosisResponse>(this.endpoints.createDiagnosis, data);
+  }
+
+  getRecentDiagnoses(days = 30, limit = 10): Observable<{ days: number; limit: number; recentDiagnoses: RecentDiagnosis[] }> {
+    return this.apiClient.get<{ days: number; limit: number; recentDiagnoses: RecentDiagnosis[] }>(
+      this.endpoints.recentDiagnoses(days, limit)
+    );
   }
 }

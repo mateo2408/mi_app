@@ -4,6 +4,7 @@ const {
     createDiagnostic,
     createDisease,
     getTreatmentCases,
+    getRecentDiagnoses,
     applyTreatment,
     getDiseases,
     getCriticalDiseases,
@@ -19,6 +20,7 @@ router.post('/', requireAuth, createDiagnostic);
 router.get('/catalog', requireAuth, getDiseases);
 router.post('/catalog', requireAuth, createDisease);
 router.get('/treatment/:diseaseId/cases', requireAuth, getTreatmentCases);
+router.get('/history/recent', requireAuth, getRecentDiagnoses);
 router.post('/treatment/apply', requireAuth, applyTreatment);
 
 // Análisis Epidemiológico (CORE)

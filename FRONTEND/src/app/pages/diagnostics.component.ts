@@ -7,7 +7,8 @@ import {
   Disease,
   Diagnosis,
   NewDisease,
-  OutbreakSummary
+  OutbreakSummary,
+  RecentDiagnosis
 } from '../core/diagnosis.models';
 import { InventoryItem, Pet } from '../core/models';
 
@@ -17,6 +18,12 @@ interface ChartItem {
   threshold: number;
   isOutbreak: boolean;
   width: number;
+}
+
+interface RecentDiagnosisItem {
+  petName: string;
+  diseaseName: string;
+  date: string;
 }
 
 @Component({
@@ -55,9 +62,9 @@ interface ChartItem {
         <div>
           <strong class="alert-title">Alerta de Brote Epidemico</strong>
           <p>{{ diagnosticAlert!.message }}</p>
-          <p *ngIf="diagnosticAlert?.inventory" class="alert-inventory">
-            Stock disponible: {{ diagnosticAlert?.inventory?.available }} {{ diagnosticAlert?.inventory?.unit }}
-            ({{ inventoryLabel(diagnosticAlert?.inventory?.status || 'missing') }})
+          <p *ngIf="diagnosticAlert.inventory" class="alert-inventory">
+            Stock disponible: {{ diagnosticAlert.inventory.available }} {{ diagnosticAlert.inventory.unit }}
+            ({{ inventoryLabel(diagnosticAlert.inventory.status || 'missing') }})
           </p>
         </div>
         <button type="button" class="close-button" (click)="diagnosticAlert = null">x</button>
@@ -137,6 +144,28 @@ interface ChartItem {
           </ng-template>
         </article>
 
+        <article class="panel history-panel">
+          <div class="panel-header panel-header-row">
+            <div>
+              <h3>Historial reciente</h3>
+              <p>Ultimos diagnósticos recuperados desde MongoDB.</p>
+            </div>
+            <span class="history-badge">{{ recentDiagnoses.length }} registros</span>
+          </div>
+
+          <div *ngIf="recentDiagnoses.length; else emptyHistory" class="history-list">
+            <div *ngFor="let item of recentDiagnoses" class="history-item">
+              <strong>{{ item.petName }}</strong>
+              <span>{{ item.diseaseName }}</span>
+              <small>{{ item.date | date:'short' }}</small>
+            </div>
+          </div>
+
+          <ng-template #emptyHistory>
+            <div class="empty-state">No hay diagnósticos recientes para mostrar.</div>
+          </ng-template>
+        </article>
+
         <article class="panel disease-panel">
           <div class="panel-header">
             <h3>Nueva enfermedad</h3>
@@ -191,7 +220,6 @@ interface ChartItem {
           </form>
         </article>
       </section>
-
     </section>
   `,
   styles: [
@@ -289,7 +317,7 @@ interface ChartItem {
 
       .workspace-grid {
         display: grid;
-        grid-template-columns: 1.05fr 1.4fr;
+        grid-template-columns: 1.05fr 1.4fr 1fr;
         gap: 18px;
       }
 
@@ -352,12 +380,14 @@ interface ChartItem {
         background: rgba(148, 163, 184, 0.18);
       }
 
-      .chart-list {
+      .chart-list,
+      .history-list {
         display: grid;
         gap: 14px;
       }
 
-      .chart-row {
+      .chart-row,
+      .history-item {
         display: grid;
         gap: 8px;
       }
@@ -369,7 +399,9 @@ interface ChartItem {
         color: #0f172a;
       }
 
-      .chart-meta span {
+      .chart-meta span,
+      .history-item span,
+      .history-item small {
         color: #64748b;
       }
 
@@ -403,6 +435,30 @@ interface ChartItem {
       .chart-tag-alert {
         background: rgba(239, 68, 68, 0.12);
         color: #b91c1c;
+      }
+
+      .history-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .history-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.1);
+        color: #1d4ed8;
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+
+      .history-item {
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(248, 250, 252, 0.95);
+        border: 1px solid rgba(148, 163, 184, 0.18);
       }
 
       .empty-state {
@@ -441,12 +497,13 @@ interface ChartItem {
   ]
 })
 export class DiagnosticsComponent implements OnInit {
-  private svc = inject(DiagnosisService);
+  private readonly svc = inject(DiagnosisService);
 
   pets: Pet[] = [];
   catalog: Disease[] = [];
   inventoryItems: InventoryItem[] = [];
   chartItems: ChartItem[] = [];
+  recentDiagnoses: RecentDiagnosisItem[] = [];
   diagnosis: Diagnosis = { petName: '', diseaseId: '' };
   selectedPetId = '';
   selectedDiseaseMedications: string[] = [];
@@ -496,6 +553,17 @@ export class DiagnosticsComponent implements OnInit {
         this.chartItems = this.buildChartItems(data);
       },
       error: (err) => console.error('Fallo la carga del grafico:', err)
+    });
+
+    this.svc.getRecentDiagnoses().subscribe({
+      next: (data) => {
+        this.recentDiagnoses = data.recentDiagnoses.map((item: RecentDiagnosis) => ({
+          petName: item.petName,
+          diseaseName: item.disease?.name || 'Enfermedad sin nombre',
+          date: item.date
+        }));
+      },
+      error: (err) => console.error('Fallo la carga del historial reciente:', err)
     });
   }
 

@@ -129,6 +129,26 @@ const getTreatmentCases = async (req, res) => {
 };
 
 /**
+ * Obtiene el historial reciente de diagnósticos para consumo del frontend.
+ */
+const getRecentDiagnoses = async (req, res) => {
+    try {
+        const days = Number(req.query.days || 30);
+        const limit = Number(req.query.limit || 10);
+        const recentDiagnoses = await repositories.DiagnosisRepository.findRecentWithDisease(days, limit);
+
+        return res.json({
+            days: Number.isFinite(days) ? days : 30,
+            limit: Number.isFinite(limit) ? limit : 10,
+            recentDiagnoses
+        });
+    } catch (err) {
+        console.error('[Diagnostics Controller] Error en getRecentDiagnoses:', err);
+        return res.status(500).json({ message: 'Error obteniendo el historial reciente de diagnósticos.' });
+    }
+};
+
+/**
  * Aplica un tratamiento a una mascota y descuenta inventario.
  */
 const applyTreatment = async (req, res) => {
@@ -285,6 +305,7 @@ module.exports = {
     createDiagnostic,
     createDisease,
     getTreatmentCases,
+    getRecentDiagnoses,
     applyTreatment,
     getDiseases,
     getCriticalDiseases,
