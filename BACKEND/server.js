@@ -42,6 +42,11 @@ async function startServer() {
         return callback(null, true);
       }
 
+      // Permitir automáticamente cualquier puerto de localhost/127.0.0.1 en desarrollo
+      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        return callback(null, true);
+      }
+
       // Si no hay una lista explícita, aceptamos cualquier origen para facilitar consumo externo.
       if (allowedOrigins.length === 0) {
         return callback(null, true);
@@ -51,7 +56,8 @@ async function startServer() {
         return callback(null, true);
       }
 
-      return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+      // Rechazar CORS en el navegador sin lanzar un error 500 en Express
+      return callback(null, false);
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
