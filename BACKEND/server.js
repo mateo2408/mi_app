@@ -71,6 +71,15 @@ async function startServer() {
   app.use(express.json());
 
   // 3. Endpoint de salud (Health Check) para verificar que el servidor esta vivo
+  app.get('/api', (_req, res) => {
+    res.json({
+      service: 'vetcore-api',
+      status: 'ok',
+      message: 'API disponible. Usa /api/health para salud y /api/* para los recursos.'
+    });
+  });
+
+  // 3. Endpoint de salud (Health Check) para verificar que el servidor esta vivo
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' });
   });
@@ -85,6 +94,29 @@ async function startServer() {
   app.use('/api/diagnostics', diagnosticsRoutes);
   app.use('/api/locations', locationsRoutes);
   app.use('/api/inventory', inventoryRoutes);
+
+  // Respuesta controlada para rutas /api inexistentes.
+  app.use('/api', (req, res) => {
+    res.status(404).json({
+      message: 'Ruta de API no encontrada',
+      path: req.originalUrl,
+      available: [
+        '/api/health',
+        '/api/auth/login',
+        '/api/auth/me',
+        '/api/dashboard/summary',
+        '/api/owners',
+        '/api/pets',
+        '/api/appointments',
+        '/api/records',
+        '/api/diagnostics',
+        '/api/locations/countries',
+        '/api/locations/provinces',
+        '/api/locations/cities',
+        '/api/inventory'
+      ]
+    });
+  });
 
   // 5. Configurar Express para servir el Frontend (Angular) compilado
   const path = require('path');
