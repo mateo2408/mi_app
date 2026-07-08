@@ -1,3 +1,12 @@
+/**
+ * SRP (Single Responsibility Principle): Controlador de Dueños
+ * DIP (Dependency Inversion Principle): Delega acceso a datos a modelo Owner (abstracción).
+ *
+ * Responsabilidad única: Maneja las peticiones HTTP y orquesta la lógica de validación y CRUD de dueños.
+ * - Validar entrada HTTP (cédula)
+ * - Ejecutar operaciones CRUD
+ * - Construir respuesta HTTP
+ */
 const Owner = require('../models/Owner');
 
 function luhnCheck(value) {

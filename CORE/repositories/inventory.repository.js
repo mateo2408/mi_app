@@ -1,7 +1,10 @@
 /**
- * Repository Pattern: Inventory
- * Abstrae la lógica de acceso a datos (Mongoose) de los servicios de CORE.
- * Responsabilidad: Manejo de datos puros del inventario de medicamentos.
+ * SRP (Single Responsibility Principle): Repository Pattern — Inventory
+ * DIP (Dependency Inversion Principle): Abstrae la lógica de acceso a datos (Mongoose) de los servicios de CORE.
+ * Responsabilidad única: Manejo de datos puros del inventario de medicamentos (CRUD directo con Mongoose).
+ *
+ * Los servicios CORE (InventoryService) dependen de esta abstracción, no de Mongoose directamente.
+ * Esto permite cambiar la BD sin tocar la lógica de cálculo de stock.
  */
 const MedicationInventory = require('../../BACKEND/models/MedicationInventory');
 

@@ -1,8 +1,11 @@
 /**
- * CONTROLADOR: Inventory
+ * SRP (Single Responsibility Principle): Controlador de Inventario
+ * DIP (Dependency Inversion Principle): Depende de InventoryService inyectado, no de BD directamente.
  *
- * Responsabilidad: Orquestar el flujo HTTP del inventario.
- * Delega la lógica de negocio al CORE (InventoryService).
+ * Responsabilidad única: Orquestar el flujo HTTP del inventario.
+ * - Validar entrada HTTP
+ * - Delegar lógica de negocio al CORE (InventoryService)
+ * - Construir respuesta HTTP
  */
 const { inventoryService } = require('../../CORE');
 

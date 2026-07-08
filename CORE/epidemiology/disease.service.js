@@ -1,7 +1,9 @@
 /**
- * CORE SERVICE: Disease Service
- * 
- * Responsabilidad: Contiene lógica de negocio relacionada con enfermedades.
+ * SRP (Single Responsibility Principle): Disease Service
+ * ISP (Interface Segregation Principle): Recibe solo DiseaseRepository, expone métodos de enfermedades.
+ * DIP (Dependency Inversion Principle): Depende de DiseaseRepository (abstracción), no de Mongoose.
+ *
+ * Responsabilidad única: Lógica de negocio relacionada con enfermedades.
  * - Validación de datos
  * - Normalización de información
  * - Cálculos basados en metadatos de enfermedades

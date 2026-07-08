@@ -1,7 +1,9 @@
 /**
- * CORE SERVICE: Inventory Service
+ * SRP (Single Responsibility Principle): Inventory Service
+ * ISP (Interface Segregation Principle): Recibe solo InventoryRepository, expone solo métodos de validación/cálculo de stock.
+ * DIP (Dependency Inversion Principle): Depende de InventoryRepository (abstracción), no de Mongoose.
  *
- * Responsabilidad:
+ * Responsabilidad única:
  * - Validación y normalización de inventario
  * - Cálculo de estados de stock
  * - Conteo de disponibilidad por medicamento

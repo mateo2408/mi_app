@@ -1,10 +1,13 @@
 /**
- * CONTROLADOR: Diagnostics
- * 
- * Responsabilidad: Orquestar el flujo HTTP para diagnósticos.
- * Delega la lógica de negocio al CORE (OutbreakAnalyzer, DiseaseService, etc).
- * 
- * Este controlador es PURO CRUD + orquestación, sin lógica de negocio.
+ * SRP (Single Responsibility Principle): Controlador de Diagnósticos
+ * DIP (Dependency Inversion Principle): Depende de servicios CORE inyectados, no de implementaciones concretas.
+ *
+ * Responsabilidad única: Orquestar el flujo HTTP para diagnósticos.
+ * - Validar entrada HTTP
+ * - Delegar lógica de negocio al CORE (OutbreakAnalyzer, DiseaseService, etc)
+ * - Construir respuesta HTTP
+ *
+ * Este controlador es PURO CRUD + orquestación, sin lógica epidemiológica.
  */
 
 const { repositories, outbreakAnalyzer, diseaseService, epidemicComparator, inventoryService } = require('../../CORE');

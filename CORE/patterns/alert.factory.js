@@ -34,7 +34,8 @@ class AlertCreator {
 }
 
 /**
- * Crea alertas de brote epidemiológico (6+ casos en ventana de 60 días).
+ * LSP (Liskov Substitution Principle): Crea alertas de brote epidemiológico (6+ casos en ventana de 60 días).
+ * Implementa el contrato de AlertCreator. Puede sustituir a cualquier otro AlertCreator sin romper el código.
  */
 class OutbreakAlertCreator extends AlertCreator {
     createAlert(context) {
@@ -78,7 +79,8 @@ class OutbreakAlertCreator extends AlertCreator {
 }
 
 /**
- * Crea alertas de stock bajo o agotado para un medicamento específico.
+ * LSP (Liskov Substitution Principle): Crea alertas de stock bajo o agotado para un medicamento específico.
+ * Implementa el contrato de AlertCreator. Puede sustituir a cualquier otro AlertCreator sin romper el código.
  */
 class StockAlertCreator extends AlertCreator {
     createAlert(context) {
@@ -112,7 +114,9 @@ class StockAlertCreator extends AlertCreator {
 }
 
 /**
- * Factory Method: selecciona el creador adecuado según el tipo de alerta.
+ * OCP (Open/Closed Principle): Factory Method que selecciona el creador adecuado según el tipo de alerta.
+ * Abierto a extensión: Se pueden registrar nuevos AlertCreators sin modificar el código existente.
+ * Cerrado a modificación: El método create() y la lógica no cambian.
  */
 class AlertFactory {
     static #creators = {
@@ -136,6 +140,7 @@ class AlertFactory {
 
     /**
      * Registra un nuevo creador de alertas (extensibilidad / OCP).
+     * Permite agregar nuevos tipos de alerta sin modificar OutbreakAnalyzer ni otros clientes.
      * @param {string} type
      * @param {AlertCreator} creator
      */

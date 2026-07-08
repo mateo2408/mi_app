@@ -1,7 +1,9 @@
 /**
- * CORE SERVICE: Epidemic Comparator
- * 
- * Responsabilidad: Realizar análisis comparativos entre epidemiologías.
+ * SRP (Single Responsibility Principle): Epidemic Comparator
+ * ISP (Interface Segregation Principle): Recibe solo OutbreakAnalyzer, realiza análisis comparativos.
+ * DIP (Dependency Inversion Principle): Depende de OutbreakAnalyzer (abstracción).
+ *
+ * Responsabilidad única: Realizar análisis comparativos entre epidemiologías.
  * - Comparar tasas de incidencia
  * - Identificar patrones
  * - Generar reportes comparativos

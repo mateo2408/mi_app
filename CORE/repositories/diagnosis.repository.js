@@ -1,7 +1,10 @@
 /**
- * Repository Pattern: Diagnosis
- * Abstrae la lógica de acceso a datos (Mongoose) de los servicios de CORE.
- * Responsabilidad: Manejo de datos puros de diagnósticos.
+ * SRP (Single Responsibility Principle): Repository Pattern — Diagnosis
+ * DIP (Dependency Inversion Principle): Abstrae la lógica de acceso a datos (Mongoose) de los servicios de CORE.
+ * Responsabilidad única: Manejo de datos puros de diagnósticos (CRUD directo con Mongoose).
+ * 
+ * Los servicios CORE (OutbreakAnalyzer) dependen de esta abstracción, no de Mongoose directamente.
+ * Esto permite cambiar la BD sin tocar el análisis epidemiológico.
  */
 const Diagnosis = require('../../BACKEND/models/Diagnosis');
 

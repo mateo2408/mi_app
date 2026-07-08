@@ -1,9 +1,12 @@
 /**
- * CONTROLADOR: Dashboard
+ * SRP (Single Responsibility Principle): Controlador de Dashboard
+ * DIP (Dependency Inversion Principle): Depende de servicios CORE inyectados (epidemicComparator, inventoryService).
  * 
- * Responsabilidad: Orquestar datos para la pantalla principal.
- * Delega análisis epidemiológico al CORE.
- * 
+ * Responsabilidad única: Orquestar datos para la pantalla principal.
+ * - Agregar datos de múltiples fuentes en paralelo
+ * - Delegar análisis epidemiológico al CORE
+ * - Construir respuesta HTTP con vista consolidada
+ *
  * Este controlador es un agregador de datos (CRUD + orquestación básica).
  */
 

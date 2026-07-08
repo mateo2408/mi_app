@@ -1,6 +1,11 @@
 /**
- * Controlador de Mascotas (Pets Controller).
- * Maneja las peticiones HTTP y orquesta la logica de CRUD basica.
+ * SRP (Single Responsibility Principle): Controlador de Mascotas
+ * DIP (Dependency Inversion Principle): Delega acceso a datos a modelo Mongoose (abstracción).
+ *
+ * Responsabilidad única: Maneja las peticiones HTTP y orquesta la lógica de CRUD básica de mascotas.
+ * - Validar entrada HTTP
+ * - Ejecutar operaciones CRUD
+ * - Construir respuesta HTTP
  */
 const Pet = require('../models/Pet');
 
